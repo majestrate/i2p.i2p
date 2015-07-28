@@ -84,23 +84,14 @@ class SnarkRPCHandler {
     private String generateSessionID() {
         return String.format("trans-%s", _context.random().nextLong());
     }
-  
-    /** get a new unique session ID we don't already have */
-    private String acquireNewSessionID() {
-        String sessionID = generateSessionID();
-        while(hasSession(sessionID)) {
-            sessionID = generateSessionID();
-        }
-        return sessionID;
-    }
-  
+
     /**
      * create a new session, store it's info
      * @param session_duration how long until this session expires in ms
      * @return the session ID
      */
     private String createSession() {
-        String sessionID = acquireNewSessionID();
+        String sessionID = generateSessionID();
         _sessions.put(sessionID, new RPCSession());
         return sessionID;
     }
