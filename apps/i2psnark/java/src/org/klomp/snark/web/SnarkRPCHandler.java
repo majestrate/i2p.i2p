@@ -54,7 +54,7 @@ class SnarkRPCHandler {
         }
     
         boolean expired() {
-            return new Date().getTime() < expires_at;
+            return new Date().getTime() >= expires_at;
         }
     }
   
@@ -62,7 +62,7 @@ class SnarkRPCHandler {
      * active sessions
      * maps session id -> session info 
      **/
-    private final Map<String, RPCSession> _sessions;
+    private final Map<String, RPCSession> _sessions; 
     /** i2p app context from snark */
     private transient final I2PAppContext _context;
     /** transmissionrpc method handlers */
