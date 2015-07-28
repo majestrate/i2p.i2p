@@ -82,7 +82,7 @@ class SnarkRPCHandler {
   
     /** generate and return a new session id, does not check for duplicates */
     private String generateSessionID() {
-        return String.format("trans-%l", _context.random().nextLong());
+        return String.format("trans-%s", _context.random().nextLong());
     }
   
     /** get a new unique session ID we don't already have */
