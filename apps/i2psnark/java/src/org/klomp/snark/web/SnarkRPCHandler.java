@@ -127,11 +127,16 @@ class SnarkRPCHandler {
         // parse request
         JSONObject json_req;
         try {
+            
             json_req = new JSONObject(json);
         } catch (JSONException thrown) {
             // error parsing
             // tell them about it via an error
-            json_resp.put("result", thrown.getMessage());
+            StringWriter str = new StringWriter();
+            PrintWriter wr = new PrintWriter(str);
+            wr.println("error parsing json: "+json);
+            thrown.printStackTrace(wr);
+            json_resp.put("result", str.toString());
             respondJSON(json_resp, resp);
             return;
         }

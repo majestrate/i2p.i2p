@@ -205,6 +205,23 @@ public class I2PSnarkServlet extends BasicServlet {
             return;
         }
 
+        // handle transmission rpc
+        if (_rpcPath != null && _rpcPath.equals(path)) {
+          if ( method.equals("POST") ) {
+            if (_rpcHandler == null) {
+              // it's disabled, tell them it's not found
+              resp.sendError(404);
+            } else {
+              // handle rpc requset
+              _rpcHandler.handleRPC(_manager, req, resp);
+            }
+          } else {
+            // we only allow POST
+            resp.sendError(405);
+          }
+          return;
+        }
+        
         _themePath = "/themes/snark/" + _manager.getTheme() + '/';
         _imgPath = _themePath + "images/";
         req.setCharacterEncoding("UTF-8");
@@ -223,22 +240,7 @@ public class I2PSnarkServlet extends BasicServlet {
             return;
         }
         
-        // handle transmission rpc
-        if (_rpcPath != null && _rpcPath.equals(path)) {
-          if ( method.equals("POST") ) {
-            if (_rpcHandler == null) {
-              // it's disabled, tell them it's not found
-              resp.sendError(404);
-            } else {
-              // handle rpc requset
-              _rpcHandler.handleRPC(_manager, req, resp);
-            }
-          } else {
-            // we only allow POST
-            resp.sendError(405);
-          }
-          return;
-        }
+        
 
         boolean isConfigure = "/configure".equals(path);
         // index.jsp doesn't work, it is grabbed by the war handler before here
