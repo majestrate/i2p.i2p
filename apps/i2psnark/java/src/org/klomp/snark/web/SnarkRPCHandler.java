@@ -201,11 +201,18 @@ class SnarkRPCHandler {
      */
     protected boolean checkCSRF(HttpServletRequest req) {
         String sessionID = req.getHeader(TRPC_SESSION_HEADER);
-        boolean expired = _sessions.get(sessionID).expired();
-        // remove this session if it expired
-        if(expired) {
-            _sessions.remove(sessionID);
+        if (sessionID == null) {
+            return false;
         }
-        return hasSession(sessionID);
+        if (hasSession(sessionID)) {
+            boolean expired = _sessions.get(sessionID).expired();
+            // remove this session if it expired
+            if(expired) {
+                _sessions.remove(sessionID);
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 }
