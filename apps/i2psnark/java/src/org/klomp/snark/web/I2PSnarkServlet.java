@@ -71,7 +71,7 @@ public class I2PSnarkServlet extends BasicServlet {
     
     private static final String PROP_RPC_ENABLE = "i2psnark.rpc.enable";
     private static final String PROP_RPC_PATH = "i2psnark.rpc.path";
-    private static final String DEFAULT_RPC_PATH = "/.rpc";
+    private static final String DEFAULT_RPC_PATH = "/.rpc/rpc/";
     
     public I2PSnarkServlet() {
         super();
@@ -100,7 +100,7 @@ public class I2PSnarkServlet extends BasicServlet {
         setResourceBase(_manager.getDataDir());
         setWarBase(WARBASE);
         
-        if (_context.getProperty(PROP_RPC_ENABLE, false)) {
+        if (_context.getProperty(PROP_RPC_ENABLE, true)) {
           // set up rpc 
           _rpcHandler = new SnarkRPCHandler(_context);
           _rpcPath = _context.getProperty(PROP_RPC_PATH, DEFAULT_RPC_PATH);
