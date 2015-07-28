@@ -117,7 +117,7 @@ public class Peer implements Comparable<Peer>
    * @param metainfo null if in magnet mode
    * @exception IOException when an error occurred during the handshake.
    */
-  public Peer(final I2PSocket sock, InputStream in, OutputStream out, byte[] my_id, byte[] infohash, MetaInfo metainfo)
+  public Peer(final I2PSocket sock, InputStream in, OutputStream out, byte[] my_id, byte[] infohash, MetaInfo metainfo, I2PSnarkUtil util)
     throws IOException
   {
     this.my_id = my_id;
@@ -126,7 +126,7 @@ public class Peer implements Comparable<Peer>
     this.sock = sock;
 
     byte[] id  = handshake(in, out);
-    this.peerID = new PeerID(id, sock.getPeerDestination());
+    this.peerID = new PeerID(id, sock.getPeerDestination(), util);
     _id = __id.incrementAndGet();
     if (_log.shouldLog(Log.DEBUG))
         _log.debug("Creating a new peer " + peerID.toString(), new Exception("creating " + _id));

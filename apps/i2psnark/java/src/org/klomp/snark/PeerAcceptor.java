@@ -103,7 +103,7 @@ class PeerAcceptor
             if (coordinator.needPeers())
               {
                 Peer peer = new Peer(socket, in, out, coordinator.getID(),
-                                     coordinator.getInfoHash(), coordinator.getMetaInfo());
+                                     coordinator.getInfoHash(), coordinator.getMetaInfo(), coordinator.getUtil());
                 coordinator.addPeer(peer);
               }
             else
@@ -121,7 +121,7 @@ class PeerAcceptor
                 if (cur.needPeers())
                   {
                     Peer peer = new Peer(socket, in, out, cur.getID(),
-                                         cur.getInfoHash(), cur.getMetaInfo());
+                                         cur.getInfoHash(), cur.getMetaInfo(), coordinator.getUtil());
                     cur.addPeer(peer);
                     return;
                   }

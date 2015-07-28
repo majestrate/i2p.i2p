@@ -133,7 +133,7 @@ class TrackerInfo
         PeerID peerID;
         try {
             // Case 1 - non-compact - A list of dictionaries (maps)
-            peerID = new PeerID(bev.getMap());
+            peerID = new PeerID(bev.getMap(), util);
         } catch (InvalidBEncodingException ibe) {
             try {
                 // Case 2 - compact - A list of 32-byte binary strings (hashes)
