@@ -60,11 +60,19 @@ public class I2PSnarkServlet extends BasicServlet {
     private String _imgPath;
     private String _lastAnnounceURL;
     
+    /** jsonrpc handler **/
+    private SnarkRPCHandler _rpcHandler;
+    private String _rpcPath;
+    
     private static final String DEFAULT_NAME = "i2psnark";
     public static final String PROP_CONFIG_FILE = "i2psnark.configFile";
     private static final String WARBASE = "/.resources/";
     private static final char HELLIP = '\u2026';
- 
+    
+    private static final String PROP_RPC_ENABLE = "i2psnark.rpc.enable";
+    private static final String PROP_RPC_PATH = "i2psnark.rpc.path";
+    private static final String DEFAULT_RPC_PATH = "/rpc";
+    
     public I2PSnarkServlet() {
         super();
     }
@@ -91,6 +99,13 @@ public class I2PSnarkServlet extends BasicServlet {
         loadMimeMap("org/klomp/snark/web/mime");
         setResourceBase(_manager.getDataDir());
         setWarBase(WARBASE);
+        
+        if (_context.getProperty(PROP_RPC_ENABLE, false)) {
+          // set up rpc 
+          _rpcHandler = new SnarkRPCHandler(_context);
+          _rpcPath = _context.getProperty(PROP_RPC_PATH, DEFAULT_RPC_PATH);
+        }
+        
     }
     
     @Override
@@ -206,6 +221,23 @@ public class I2PSnarkServlet extends BasicServlet {
             writeMessages(out, false, peerString);
             writeTorrents(out, req);
             return;
+        }
+        
+        // handle transmission rpc
+        if (_rpcPath != null && _rpcPath.equals(path)) {
+          if ( method.equals("POST") ) {
+            if (_rpcHandler == null) {
+              // it's disabled, tell them it's not found
+              resp.sendError(404);
+            } else {
+              // handle rpc requset
+              _rpcHandler.handleRPC(_manager, req, resp);
+            }
+          } else {
+            // we only allow POST
+            resp.sendError(405);
+          }
+          return;
         }
 
         boolean isConfigure = "/configure".equals(path);
