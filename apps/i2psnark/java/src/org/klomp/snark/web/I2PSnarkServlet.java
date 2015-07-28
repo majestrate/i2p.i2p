@@ -71,7 +71,7 @@ public class I2PSnarkServlet extends BasicServlet {
     
     private static final String PROP_RPC_ENABLE = "i2psnark.rpc.enable";
     private static final String PROP_RPC_PATH = "i2psnark.rpc.path";
-    private static final String DEFAULT_RPC_PATH = "/rpc";
+    private static final String DEFAULT_RPC_PATH = "/.rpc/";
     
     public I2PSnarkServlet() {
         super();
