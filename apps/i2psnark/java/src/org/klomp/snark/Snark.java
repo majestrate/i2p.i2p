@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -31,6 +32,7 @@ import java.util.StringTokenizer;
 
 import net.i2p.I2PAppContext;
 import net.i2p.client.streaming.I2PServerSocket;
+import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.util.Log;
 import net.i2p.util.SecureFile;
@@ -46,6 +48,9 @@ public class Snark
   private final static int MIN_PORT = 6881;
   private final static int MAX_PORT = 6889;
 
+  /** The Name of our client for MetaInfo.created_by */
+  public final static String CLIENT_NAME = "I2PSnark";
+  
   // Whether or not to ask the user for commands while sharing
   //private static boolean command_interpreter = true;
 
@@ -685,6 +690,15 @@ public class Snark
      */
     public byte[] getID() {
         return id;
+    }
+    
+    /**
+     * @return the ID as a long 
+     * @since rpc
+     */
+    public long getLongID() {
+        // according to generateID the byte at index 11 is a 3 so it will never be negative 
+        return DataHelper.fromLong(id, 11, 8);
     }
 
     /**
@@ -1326,4 +1340,6 @@ public class Snark
     long limit = 1024l * _util.getMaxUpBW();
     return total > limit;
   }
+
+
 }

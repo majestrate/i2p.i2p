@@ -75,9 +75,13 @@ class SnarkRPCHandler {
         _methods = new ConcurrentHashMap<String, RPCMethod>();
     }
   
+    private void addMethod(RPCMethod method) {
+        _methods.put(method.name(), method);
+    }
+    
     /** initialize _methods map with handlers */
     private void initMethods() {
-    
+        
     }
   
     /** generate and return a new session id, does not check for duplicates */

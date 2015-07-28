@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.text.Collator;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -1440,6 +1439,7 @@ public class I2PSnarkServlet extends BasicServlet {
     private static final int MAX_DISPLAYED_FILENAME_LENGTH = 50;
     private static final int MAX_DISPLAYED_ERROR_LENGTH = 43;
 
+    
     /**
      *  Display one snark (one line in table, unless showPeers is true)
      *
@@ -1791,26 +1791,7 @@ public class I2PSnarkServlet extends BasicServlet {
                 out.write("<tr class=\"" + rowClass + "\"><td></td>");
                 out.write("<td colspan=\"4\" align=\"right\">");
                 PeerID pid = peer.getPeerID();
-                String ch = pid != null ? pid.toString().substring(0, 4) : "????";
-                String client;
-                if ("AwMD".equals(ch))
-                    client = _("I2PSnark");
-                else if ("BFJT".equals(ch))
-                    client = "I2PRufus";
-                else if ("TTMt".equals(ch))
-                    client = "I2P-BT";
-                else if ("LUFa".equals(ch))
-                    client = "Vuze" + getAzVersion(pid.getID());
-                else if ("CwsL".equals(ch))
-                    client = "I2PSnarkXL";
-                else if ("ZV".equals(ch.substring(2,4)) || "VUZP".equals(ch))
-                    client = "Robert" + getRobtVersion(pid.getID());
-                else if (ch.startsWith("LV")) // LVCS 1.0.2?; LVRS 1.0.4
-                    client = "Transmission" + getAzVersion(pid.getID());
-                else if ("LUtU".equals(ch))
-                    client = "KTorrent" + getAzVersion(pid.getID());
-                else
-                    client = _("Unknown") + " (" + ch + ')';
+                String client = pid.getClientName();
                 out.write(client + "&nbsp;&nbsp;<tt>" + peer.toString().substring(5, 9)+ "</tt>");
                 if (showDebug)
                     out.write(" inactive " + (peer.getInactiveTime() / 1000) + "s");
@@ -1897,49 +1878,7 @@ public class I2PSnarkServlet extends BasicServlet {
                 .replace("&", "\\u0026");
     }
 
-    /**
-     *  Get version from bytes 3-6
-     *  @return " w.x.y.z" or ""
-     *  @since 0.9.14
-     */
-    private static String getAzVersion(byte[] id) {
-        if (id[7] != '-')
-            return "";
-        StringBuilder buf = new StringBuilder(16);
-        buf.append(' ');
-        for (int i = 3; i <= 6; i++) {
-            int val = id[i] - '0';
-            if (val < 0)
-                return "";
-            if (val > 9)
-                val = id[i] - 'A';
-            if (i != 6 || val != 0) {
-                if (i != 3)
-                    buf.append('.');
-                buf.append(val);
-            }
-        }
-        return buf.toString();
-    }
-
-    /**
-     *  Get version from bytes 3-5
-     *  @return " w.x.y" or ""
-     *  @since 0.9.14
-     */
-    private static String getRobtVersion(byte[] id) {
-        StringBuilder buf = new StringBuilder(8);
-        buf.append(' ');
-        for (int i = 3; i <= 5; i++) {
-            int val = id[i];
-            if (val < 0)
-                return "";
-            if (i != 3)
-                buf.append('.');
-            buf.append(val);
-        }
-        return buf.toString();
-    }
+   
     
     /** @since 0.8.2 */
     private static String thinsp(boolean disable) {

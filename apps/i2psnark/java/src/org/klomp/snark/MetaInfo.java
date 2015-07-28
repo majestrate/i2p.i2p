@@ -91,7 +91,9 @@ public class MetaInfo
     this.privateTorrent = privateTorrent;
     this.announce_list = announce_list;
     this.comment = null;
-    this.created_by = null;
+    // this was created by I2PSnark
+    this.created_by = Snark.CLIENT_NAME;
+    // this.created_by = null;
     this.creation_date = I2PAppContext.getGlobalContext().clock().now();
 
     // TODO if we add a parameter for other keys
@@ -435,7 +437,7 @@ public class MetaInfo
 
   /**
    * The created-by string or null.
-   * Not available for locally-created torrents.
+   * If it was created locally it returns Snark.CLIENT_NAME;
    * @since 0.9.7
    */
   public String getCreatedBy() {

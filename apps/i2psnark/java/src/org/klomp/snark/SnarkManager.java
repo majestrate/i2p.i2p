@@ -1125,6 +1125,37 @@ public class SnarkManager implements CompleteListener {
     }
 
     /**
+     * Grab the torrents that have the given Long IDs
+     * @return a Collection of Snark that can be emtpy if nothing is found
+     */
+    public Collection<Snark> getTorrentsByIDs(List<Long> ids) {
+        Collection<Snark> found = new ArrayList<Snark>();
+        synchronized (_snarks) {
+            for (Snark s : _snarks.values()) {
+                if (ids.contains(s.getLongID())) {
+                    found.add(s);
+                }
+            }
+        }
+        return found;
+    }
+    
+    /**
+     * Grab the torrent given the Long ID
+     * @return Snark or null
+     * @since rpc
+     */
+    public Snark getTorrentByLongID(long id) {
+        synchronized (_snarks) {
+            for (Snark s : _snarks.values()) {
+                if (s.getLongID() == id)
+                    return s;
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Grab the torrent given the info hash
      * @return Snark or null
      * @since 0.8.4

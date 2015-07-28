@@ -54,30 +54,30 @@ public class PeerID implements Comparable<PeerID>
   private final I2PSnarkUtil util;
   private String _toStringCache;
 
-  public PeerID(byte[] id, Destination address)
+  public PeerID(byte[] id, Destination address, I2PSnarkUtil util)
   {
     this.id = id;
     this.address = address;
     this.port = TrackerClient.PORT;
     this.destHash = address.calculateHash().getData();
     hash = calculateHash();
-    util = null;
+    this.util = util;
   }
 
   /**
    * Creates a PeerID from a BDecoder.
    */
-  public PeerID(BDecoder be)
+  public PeerID(BDecoder be, I2PSnarkUtil util)
     throws IOException
   {
-    this(be.bdecodeMap().getMap());
+    this(be.bdecodeMap().getMap(), util);
   }
 
   /**
    * Creates a PeerID from a Map containing BEncoded peer id, ip and
    * port.
    */
-  public PeerID(Map<String, BEValue> m)
+  public PeerID(Map<String, BEValue> m, I2PSnarkUtil util)
     throws InvalidBEncodingException, UnknownHostException
   {
     BEValue bevalue = m.get("peer id");
@@ -95,7 +95,7 @@ public class PeerID implements Comparable<PeerID>
     port = TrackerClient.PORT;
     this.destHash = address.calculateHash().getData();
     hash = calculateHash();
-    util = null;
+    this.util = util;
   }
 
   /**
@@ -239,6 +239,81 @@ public class PeerID implements Comparable<PeerID>
     return _toStringCache;
   }
 
+  /**
+   * moved from I2PSnar
+   * @return the Bittorrent Client's name given this peer ID
+   */
+  public String getClientName() {
+      String ch = toString().substring(0, 4);
+      String client;
+      if ("AwMD".equals(ch))
+          client = util.getString("I2PSnark");
+      else if ("BFJT".equals(ch))
+          client = "I2PRufus";
+      else if ("TTMt".equals(ch))
+          client = "I2P-BT";
+      else if ("LUFa".equals(ch))
+          client = "Vuze" + getAzVersion(getID());
+      else if ("CwsL".equals(ch))
+          client = "I2PSnarkXL";
+      else if ("ZV".equals(ch.substring(2,4)) || "VUZP".equals(ch))
+          client = "Robert" + getRobtVersion(getID());
+      else if (ch.startsWith("LV")) // LVCS 1.0.2?; LVRS 1.0.4
+          client = "Transmission" + getAzVersion(getID());
+      else if ("LUtU".equals(ch))
+          client = "KTorrent" + getAzVersion(getID());
+      else
+          client = util.getString("Unknown") + " (" + ch + ')';
+      return client;
+      
+  }
+  
+  /**
+   *  moved from I2PSnarkServlet
+   *  Get version from bytes 3-6
+   *  @return " w.x.y.z" or ""
+   *  @since 0.9.14
+   */
+  private static String getAzVersion(byte[] id) {
+      if (id[7] != '-')
+          return "";
+      StringBuilder buf = new StringBuilder(16);
+      buf.append(' ');
+      for (int i = 3; i <= 6; i++) {
+          int val = id[i] - '0';
+          if (val < 0)
+              return "";
+          if (val > 9)
+              val = id[i] - 'A';
+          if (i != 6 || val != 0) {
+              if (i != 3)
+                  buf.append('.');
+              buf.append(val);
+          }
+      }
+      return buf.toString();
+  }
+
+  /**
+   *  moved from I2PSnarkServlet
+   *  Get version from bytes 3-5
+   *  @return " w.x.y" or ""
+   *  @since 0.9.14
+   */
+  private static String getRobtVersion(byte[] id) {
+      StringBuilder buf = new StringBuilder(8);
+      buf.append(' ');
+      for (int i = 3; i <= 5; i++) {
+          int val = id[i];
+          if (val < 0)
+              return "";
+          if (i != 3)
+              buf.append('.');
+          buf.append(val);
+      }
+      return buf.toString();
+  }
+  
   /**
    * Encode an id as a hex encoded string and remove leading zeros.
    */
