@@ -65,8 +65,8 @@ public class SnarkRPCHandler {
     
     /** initialize _methods map with handlers */
     private void initMethods() {
-        addMethod(new TorrentGet());
-        addMethod(new SessionGet());
+        addMethod(new TorrentGet(_context));
+        addMethod(new SessionGet(_context));
     }
   
     /** generate and return a new session id, does not check for duplicates */

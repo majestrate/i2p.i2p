@@ -1,6 +1,10 @@
 package org.klomp.snark.web.rpc.handlers;
 
+import java.io.File;
 import java.util.List;
+
+import net.i2p.I2PAppContext;
+import net.i2p.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +24,12 @@ import org.klomp.snark.web.rpc.RPCSession;
  */
 public class TorrentGet extends AbstractRPCMethod {
 
+    private final Log _log;
+    
+    public TorrentGet(I2PAppContext ctx) {
+        _log = ctx.logManager().getLog(this.getClass());
+    }
+    
     @Override
     public String name() {
         return "torrent-get";
@@ -32,6 +42,7 @@ public class TorrentGet extends AbstractRPCMethod {
         JSONObject info = new JSONObject();
         MetaInfo meta = s.getMetaInfo();
         if (meta == null) {
+            _log.warn("meta info was null for snark: id="+s.getLongID());
             return null;
         }
         for (Object o : fields) {
@@ -91,6 +102,69 @@ public class TorrentGet extends AbstractRPCMethod {
             } else if (val.equals("downloadLimit")) {
                 // TODO: downloadLimit
                 info.put(val, 0);
+            } else if (val.equals("downloadLimited")) {
+                // TODO: downloadLimited
+                info.put(val, false);
+            } else if (val.equals("error")) {
+                // TODO: error
+                info.put(val, 0);
+            } else if (val.equals("errorString")) {
+                // TODO: errorString
+                info.put(val, "");
+            } else if (val.equals("eta")) {
+                long eta = s.getEstimatedTimeLeft();
+                info.put(val, eta);
+            } else if (val.equals("etaIdle")) {
+                // TODO: etaIdle
+                info.put(val, 0);
+            } else if (val.equals("files")) {
+                Storage st = s.getStorage();
+                // make records
+                JSONArray json_files = new JSONArray();
+                if (st == null) {
+                    _log.warn("storage is null for torrent with id="+s.getLongID());
+                } else {
+                    // for each file in this torrent
+                    for ( File file : st.getFiles() ) {
+                        // prepare file record
+                        JSONObject json_file = new JSONObject();
+                        // get file's index
+                        int idx = st.indexOf(file);
+                        // compute desired info
+                        long remaining = st.remaining(idx);
+                        long size = file.length();
+                        long completed = size - remaining;
+                        // put each value into the record
+                        json_file.put("size", size);
+                        json_file.put("bytesCompleted", completed);
+                        json_file.put("name", file.getName());
+                        // put file record we made into the records
+                        json_files.put(json_file);
+                    }
+                }
+                // put records into result
+                info.put(val, json_files);
+            } else if (val.equals("fileStats")) {
+                Storage st = s.getStorage();
+                JSONArray json_fileStats = new JSONArray();
+                if (st == null) {
+                    _log.warn("storage is null for torrent with id="+s.getLongID());
+                } else {
+                 // for each file in this torrent
+                    for ( File file : st.getFiles() ) {
+                        // prepare file record
+                        JSONObject json_file = new JSONObject();
+                        // get file's index
+                        int idx = st.indexOf(file);
+                        long completed = file.length() - st.remaining(idx);
+                        // compute desired info
+                        int priority = st.getPriority(idx);
+                        // put file record we made into the records
+                        json_fileStats.put(json_file);
+                    }
+                    
+                }
+                info.put(val, json_fileStats);
             }
         }
         return info;
@@ -121,6 +195,7 @@ public class TorrentGet extends AbstractRPCMethod {
                 result = "failed to get info for torrent with id: "+id;
                 break;
             }
+            info.put("id", id);
             // put it into the response
             torrents.put(info);
         }
@@ -136,6 +211,8 @@ public class TorrentGet extends AbstractRPCMethod {
                 JSONArray removed = new JSONArray();
                 result_json.put("removed", removed);
             }
+        } else {
+            _log.warn("transmission-rpc torrent-get failed: "+result);
         }
         return new Result(result, result_json);
     }

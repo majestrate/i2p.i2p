@@ -39,7 +39,7 @@ public class RunStandalone {
         
             
         WebAppContext webapp = new WebAppContext();
-        webapp.setContextPath("/");
+        webapp.setContextPath("/snark");
         webapp.setWar(warfile.getAbsolutePath());
         _server.setHandler(webapp);
      

@@ -221,7 +221,7 @@ public class I2PSnarkServlet extends BasicServlet {
           return;
         }
         
-        _themePath = "/themes/snark/" + _manager.getTheme() + '/';
+        _themePath = _contextPath + WARBASE + "themes/snark/" + _manager.getTheme() + '/';
         _imgPath = _themePath + "images/";
         req.setCharacterEncoding("UTF-8");
 
@@ -317,10 +317,10 @@ public class I2PSnarkServlet extends BasicServlet {
             delay = _manager.getRefreshDelaySeconds();
             if (delay > 0) {
                 //out.write("<meta http-equiv=\"refresh\" content=\"" + delay + ";/i2psnark/" + peerString + "\">\n");
-                out.write("<script src=\"/js/ajax.js\" type=\"text/javascript\"></script>\n" +
+                out.write("<script src=\".resources/js/ajax.js\" type=\"text/javascript\"></script>\n" +
                           "<script type=\"text/javascript\">\n"  +
                           "var failMessage = \"<div class=\\\"routerdown\\\"><b>" + _("Router is down") + "<\\/b><\\/div>\";\n" +
-                          "function requestAjax1() { ajax(\"" + _contextPath + "/.ajax/xhr1.html" +
+                          "function requestAjax1() { ajax(\"" + _contextPath + ".ajax/xhr1.html" +
                           peerString.replace("&amp;", "&") +  // don't html escape in js
                           "\", \"mainsection\", " + (delay*1000) + "); }\n" +
                           "function initAjax() { setTimeout(requestAjax1, " + (delay*1000) +");  }\n"  +
@@ -335,7 +335,7 @@ public class I2PSnarkServlet extends BasicServlet {
         out.write("<center>");
         List<Tracker> sortedTrackers = null;
         if (isConfigure) {
-            out.write("<div class=\"snarknavbar\"><a href=\"" + _contextPath + "/\" title=\"");
+            out.write("<div class=\"snarknavbar\"><a href=\"" + _contextPath + "\" title=\"");
             out.write(_("Torrents"));
             out.write("\" class=\"snarkRefresh\">");
             out.write(toThemeImg("arrow_refresh"));
@@ -346,7 +346,7 @@ public class I2PSnarkServlet extends BasicServlet {
                 out.write(_contextName);
             out.write("</a>");
         } else {
-            out.write("<div class=\"snarknavbar\"><a href=\"" + _contextPath + '/' + peerString + "\" title=\"");
+            out.write("<div class=\"snarknavbar\"><a href=\"" + _contextPath  + peerString + "\" title=\"");
             out.write(_("Refresh page"));
             out.write("\" class=\"snarkRefresh\">");
             out.write(toThemeImg("arrow_refresh"));
@@ -518,7 +518,7 @@ public class I2PSnarkServlet extends BasicServlet {
             } else {
                 sort = "";
             }
-            out.write("<a href=\"" + _contextPath + '/' + getQueryString(req, null, null, sort));
+            out.write("<a href=\"" + _contextPath + getQueryString(req, null, null, sort));
             out.write("\">");
         }
         tx = _("Torrent");

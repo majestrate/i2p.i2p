@@ -901,6 +901,19 @@ public class Snark
     }
 
     /**
+     * @since rpc
+     * @return the estimated number of seconds until this snark completes downloading. -1 for when we don't know.
+     */
+    public long getEstimatedTimeLeft() {
+        long dl = getDownloadRate();
+        long remaining = getRemainingLength();
+        if (dl > 0 && remaining > 0) {
+            return  remaining / dl;
+        }
+        return -1;
+    }
+    
+    /**
      *  Bytes still wanted. DOES account for (i.e. does not include) skipped files.
      *  FIXME -1 when not running.
      *  @return exact value. or -1 if no storage yet or when not running.
