@@ -31,5 +31,5 @@ public interface RPCMethod {
      * @param manager i2psnark instance
      * @return call result
      */
-    Result call(SnarkManager manager, JSONObject param);
+    Result call(RPCSession session, JSONObject param);
 }

@@ -18,6 +18,10 @@
                 <pathelement location="../../../core/java/build/obj" />
                 <pathelement location="../../ministreaming/java/build/obj" />
                 <pathelement location="../../jetty/jettylib/javax.servlet.jar" />
+                <pathelement location="../../jetty/jettylib/jetty-webapp.jar" />
+                <pathelement location="../../jetty/jettylib/org.mortbay.jetty.jar" />
+                <pathelement location="../../jetty/jettylib/jetty-util.jar" />
+                <pathelement location="../../jetty/jettylib/jetty-servlet.jar" />
             </classpath>
         </depend>
     </target>
@@ -38,7 +42,7 @@
             debug="true" deprecation="on" source="${javac.version}" target="${javac.version}" 
             destdir="./build/obj" 
             includeAntRuntime="false"
-            classpath="../../../core/java/build/i2p.jar:../../jetty/jettylib/javax.servlet.jar:../../ministreaming/java/build/mstreaming.jar" >
+            classpath="../../../core/java/build/i2p.jar:../../jetty/jettylib/javax.servlet.jar:../../ministreaming/java/build/mstreaming.jar:../../jetty/jettylib/jetty-webapp.jar:../../jetty/jettylib/org.mortbay.jetty.jar:../../jetty/jettylib/jetty-util.jar:../../jetty/jettylib/jetty-servlet.jar" >
             <compilerarg line="${javac.compilerargs}" />
         </javac>
     </target>
@@ -176,6 +180,15 @@
         <copy file="../../jetty/jettylib/javax.servlet.jar" tofile="./dist/lib/javax.servlet.jar" />
         <copy file="../../jetty/jettylib/org.mortbay.jetty.jar" tofile="./dist/lib/org.mortbay.jetty.jar" />
         <copy file="../../jetty/jettylib/jasper-runtime.jar" tofile="./dist/lib/jasper-runtime.jar" />
+        <copy file="../../jetty/jettylib/jetty-webapp.jar" tofile="./dist/lib/jetty-webapp.jar" />
+        <copy file="../../jetty/jettylib/jetty-util.jar" tofile="./dist/lib/jetty-util.jar" />
+        <copy file="../../jetty/jettylib/jetty-servlet.jar" tofile="./dist/lib/jetty-servlet.jar" />
+        <copy file="../../jetty/jettylib/jetty-http.jar" tofile="./dist/lib/jetty-http.jar" />
+        <copy file="../../jetty/jettylib/jetty-io.jar" tofile="./dist/lib/jetty-io.jar" />
+        <copy file="../../jetty/jettylib/jetty-security.jar" tofile="./dist/lib/jetty-security.jar" />
+        <copy file="../../jetty/jettylib/jetty-xml.jar" tofile="./dist/lib/jetty-xml.jar" />
+        <copy file="../../jetty/jettylib/jetty-i2p.jar" tofile="./dist/lib/jetty-i2p.jar" />
+        <copy file="../../jetty/jettylib/jetty-continuation.jar" tofile="./dist/lib/jetty-continuation.jar" />
         <copy file="../../ministreaming/java/build/mstreaming.jar" tofile="./dist/lib/mstreaming.jar" />
         <copy file="../../streaming/java/build/streaming.jar" tofile="./dist/lib/streaming.jar" />
         <copy file="../jetty-i2psnark.xml" tofile="./dist/jetty-i2psnark.xml" />

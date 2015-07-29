@@ -120,8 +120,9 @@ class PeerAcceptor
             if (DataHelper.eq(cur.getInfoHash(), peerInfoHash)) {
                 if (cur.needPeers())
                   {
-                    Peer peer = new Peer(socket, in, out, cur.getID(),
-                                         cur.getInfoHash(), cur.getMetaInfo(), coordinator.getUtil());
+                    Peer peer = new Peer(socket, in, out, 
+                            cur.getID(),
+                            cur.getInfoHash(), cur.getMetaInfo(), coordinator.getUtil());
                     cur.addPeer(peer);
                     return;
                   }

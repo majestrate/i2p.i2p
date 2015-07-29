@@ -21,7 +21,7 @@ public abstract class AbstractRPCMethod implements RPCMethod {
     public abstract String name();
 
     @Override
-    public abstract Result call(SnarkManager manager, JSONObject param);
+    public abstract Result call(RPCSession session, JSONObject param);
 
     /**
      *

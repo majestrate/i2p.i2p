@@ -1,12 +1,9 @@
 package org.klomp.snark.web;
 
 import java.io.IOException;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +18,10 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.klomp.snark.SnarkManager;
 import org.klomp.snark.web.rpc.RPCMethod;
+import org.klomp.snark.web.rpc.RPCSession;
+import org.klomp.snark.web.rpc.RPCSessionImpl;
+import org.klomp.snark.web.rpc.handlers.SessionGet;
+import org.klomp.snark.web.rpc.handlers.TorrentGet;
 
 /**
  * handles transmission-rpc requests
@@ -28,35 +29,15 @@ import org.klomp.snark.web.rpc.RPCMethod;
  * @author jeff
  *
  */
-class SnarkRPCHandler {
+public class SnarkRPCHandler {
 
     private static final String TRPC_SESSION_HEADER = "X-Transmission-Session-Id";
 
-    /**
-     * contains rpc session information 
-     * @author jeff
-     *
-     */
-    private class RPCSession {
-        static final long DEFAULT_SESSION_DURATION = 60 * 1000;
-        /** when this session expires */;
-        final long expires_at;
-    
-        /**
-         * @param sessionDuration how long should this session last?
-         */
-        RPCSession(long sessionDuration) {
-            expires_at = new Date().getTime() + sessionDuration;
-        }
-    
-        RPCSession() {
-            this(DEFAULT_SESSION_DURATION);
-        }
-    
-        boolean expired() {
-            return new Date().getTime() >= expires_at;
-        }
-    }
+    /** lowest transmission api version supported */
+    public static final int MIN_TRPC_VERSION = 15;
+    /** current transmission api version */
+    public static final int TRPC_VERSION = 15;
+   
   
     /** 
      * active sessions
@@ -73,6 +54,9 @@ class SnarkRPCHandler {
         _context = context;
         _sessions = new ConcurrentHashMap<String, RPCSession>();
         _methods = new ConcurrentHashMap<String, RPCMethod>();
+        
+        // populate the methods 
+        initMethods();
     }
   
     private void addMethod(RPCMethod method) {
@@ -81,7 +65,8 @@ class SnarkRPCHandler {
     
     /** initialize _methods map with handlers */
     private void initMethods() {
-        
+        addMethod(new TorrentGet());
+        addMethod(new SessionGet());
     }
   
     /** generate and return a new session id, does not check for duplicates */
@@ -94,9 +79,9 @@ class SnarkRPCHandler {
      * @param session_duration how long until this session expires in ms
      * @return the session ID
      */
-    private String createSession() {
+    private String createSession(SnarkManager manager) {
         String sessionID = generateSessionID();
-        _sessions.put(sessionID, new RPCSession());
+        _sessions.put(sessionID, new RPCSessionImpl(manager));
         return sessionID;
     }
 
@@ -118,11 +103,15 @@ class SnarkRPCHandler {
     
         // check CSRF
         if (!checkCSRF(req)) {
-            String sessionID = createSession();
+            String sessionID = createSession(manager);
             resp.setHeader(TRPC_SESSION_HEADER, sessionID);
             resp.sendError(409);
             return;
         }
+        
+        // get our session
+        String sessionID = req.getHeader(TRPC_SESSION_HEADER);
+        RPCSession rpc_session = _sessions.get(sessionID);
     
         // prepare response
         JSONObject json_resp = new JSONObject();
@@ -154,6 +143,8 @@ class SnarkRPCHandler {
         if (method == null) {
             json_resp.put("result", "no method specified");
         } else {
+            // trim off whitespaces
+            method = method.trim();
             // do we have this method?
             if (_methods.containsKey(method)) {
                 RPCMethod handler = _methods.get(method);
@@ -161,7 +152,7 @@ class SnarkRPCHandler {
                 RPCMethod.Result result = null;
                 // call it
                 try {
-                    result = handler.call(manager, args);
+                    result = handler.call(rpc_session, args);
                 } catch (Exception thrown) {
                     // if we hit an exception, report it
                     StringWriter str = new StringWriter();

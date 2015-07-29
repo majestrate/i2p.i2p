@@ -1,4 +1,4 @@
-package org.klomp.snark.web.rpc;
+package org.klomp.snark.web.rpc.handlers;
 
 import java.util.List;
 
@@ -8,6 +8,10 @@ import org.klomp.snark.MetaInfo;
 import org.klomp.snark.Snark;
 import org.klomp.snark.SnarkManager;
 import org.klomp.snark.Storage;
+import org.klomp.snark.web.rpc.AbstractRPCMethod;
+import org.klomp.snark.web.rpc.RPCMethod;
+import org.klomp.snark.web.rpc.RPCMethod.Result;
+import org.klomp.snark.web.rpc.RPCSession;
 
 /**
  * implements transmission rpc's torrent-get method
@@ -93,7 +97,8 @@ public class TorrentGet extends AbstractRPCMethod {
     }
     
     @Override
-    public Result call(SnarkManager manager, JSONObject param) {
+    public Result call(RPCSession session, JSONObject param) {
+        SnarkManager manager = session.snarkManager();
         JSONObject result_json = new JSONObject();
         // prepare result
         String result = null;
