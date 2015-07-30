@@ -2,6 +2,8 @@ package org.klomp.snark.web.rpc.handlers;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.i2p.I2PAppContext;
 import net.i2p.util.Log;
@@ -9,12 +11,11 @@ import net.i2p.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.klomp.snark.MetaInfo;
+import org.klomp.snark.Peer;
 import org.klomp.snark.Snark;
 import org.klomp.snark.SnarkManager;
 import org.klomp.snark.Storage;
 import org.klomp.snark.web.rpc.AbstractRPCMethod;
-import org.klomp.snark.web.rpc.RPCMethod;
-import org.klomp.snark.web.rpc.RPCMethod.Result;
 import org.klomp.snark.web.rpc.RPCSession;
 
 /**
@@ -24,105 +25,127 @@ import org.klomp.snark.web.rpc.RPCSession;
  */
 public class TorrentGet extends AbstractRPCMethod {
 
+    private static final long ACTIVITY_TIMEOUT = 20;
+    
     private final Log _log;
+    private final Map<String, Field<? extends Object>> _handlers;
     
     public TorrentGet(I2PAppContext ctx) {
         _log = ctx.logManager().getLog(this.getClass());
+        _handlers = new ConcurrentHashMap<String, Field<? extends Object>>();
+        initFields();
     }
     
     @Override
     public String name() {
         return "torrent-get";
     }
-
+    
+    private void addField(Field<? extends Object> f) {
+        _handlers.put(f.name(), f);
+    }
+    
     /**
-     * extract info from a Snark and return it as a JSONObject
+     * numeric status of a torrent
+     * @author jeff
+     *
      */
-    private JSONObject getTorrentInfo(Snark s, JSONArray fields) {
-        JSONObject info = new JSONObject();
-        MetaInfo meta = s.getMetaInfo();
-        if (meta == null) {
-            _log.warn("meta info was null for snark: id="+s.getLongID());
-            return null;
-        }
-        for (Object o : fields) {
-            String val = o.toString();
-            if(val.equals("activityDate")) {
-                // TODO: activityDate
-                info.put(val, 0);
-            } else if (val.equals("addedDate")) {
-                // TODO: addedDate
-                info.put(val, 0);
-            } else if (val.equals("bandwidthPriority")) {
-                // TODO: bandwidthPriority
-                info.put(val, 0);
-            } else if (val.equals("comment")) {
-                String comment = meta.getComment();
-                if (comment == null) {
-                    comment = "";
+    private static class TorrentStatus {
+        final static int STOPPED = 0;
+        final static int CHECK_WAIT = 1;
+        final static int CHECK = 2;
+        final static int DOWNLOAD_WAIT = 3;
+        final static int DOWNLOAD = 4;
+        final static int SEED_WAIT = 5;
+        final static int SEED = 6;
+    }
+    
+    /**
+     * initialize the field handlers for this handler 
+     */
+    private void initFields() {
+        // unimplemented fields
+        addField(new LongField("activityDate"));
+        addField(new LongField("addedDate"));
+        addField(new LongField("bandwidthPriority"));
+        addField(new LongField("corruptEver"));
+        addField(new LongField("doneDate"));
+        addField(new LongField("downloadLimit"));
+        addField(new BooleanField("downloadLimited"));
+        addField(new StringField("error", ""));
+        addField(new StringField("errorString", ""));
+        addField(new LongField("etaIdle"));
+        addField(new BooleanField("isFinished"));
+        
+        // implemented fields
+        addField(new StringField("comment"){
+            String extractValue(Snark s, MetaInfo meta) {
+                String comment = null;
+                if (meta != null) { 
+                    comment =  meta.getComment();
                 }
-                info.put(val, comment);
-            } else if (val.equals("corruptEver")) {
-                // TODO: corruptEver
-                info.put(val, 0);
-            } else if (val.equals("creator")) {
-                String creator = meta.getCreatedBy();
-                if (creator == null) {
-                    creator = "????";
+                return comment;
+            }
+        });
+        addField(new StringField("creator"){
+            String extractValue(Snark s, MetaInfo meta) {
+                String creator = null;
+                if (meta != null) {
+                    creator = meta.getCreatedBy();
                 }
-                info.put(val, creator);
-            } else if (val.equals("dateCreated")) {
-                long created = meta.getCreationDate();
-                info.put(val, created);
-            } else if (val.equals("desiredAvailable")) {
-                long avail = s.getRemainingLength();
-                if (avail < 0) {
-                    // if no storage yet, fall back to what metainfo says is the total length
-                    info.put(val, meta.getTotalLength());
-                } else {
-                    info.put(val, avail);
+                return creator;
+            }
+        });
+        addField(new LongField("dateCreated"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                long created = 0;
+                if (meta != null) {
+                    created = meta.getCreationDate();
                 }
-            } else if (val.equals("doneDate")) {
-                // TODO: doneDate
-                info.put(val, 0);
-            } else if (val.equals("downloadDir")) {
-                Storage st = s.getStorage();
-                String dir = "";
-                // FIXME what if storage is null like in magnet mode? It will fall back to empty string is that okay?
-                if (st != null) {
-                    dir = st.getBase().getAbsolutePath();
-                }
-                info.put(val, dir);
-            } else if (val.equals("downloadedEver")) {
+                return created;
+            }
+        });
+        addField(new LongField("desiredAvailable"){
+           Long extractValue(Snark s, MetaInfo meta) {
+               long avail = s.getRemainingLength();
+               if (avail < 0) {   
+                   return 0L;
+               } else {
+                   return s.getTotalLength() - avail;
+               }
+           }
+        });
+        addField(new StringField("downloadDir"){
+           String extractValue(Snark s, MetaInfo meta) {
+               Storage st = s.getStorage();
+               String dir = "";
+               // FIXME what if storage is null like in magnet mode? It will fall back to empty string is that okay?
+               if (st != null) {
+                   dir = st.getBase().getAbsolutePath();
+               }
+               return dir;
+           }
+        });
+        addField(new LongField("downloadedEver"){
+            Long extractValue(Snark s, MetaInfo meta){
                 long dl = s.getDownloaded();
                 if (dl < 0) {
                     dl = 0;
                 }
-                info.put(val, dl);
-            } else if (val.equals("downloadLimit")) {
-                // TODO: downloadLimit
-                info.put(val, 0);
-            } else if (val.equals("downloadLimited")) {
-                // TODO: downloadLimited
-                info.put(val, false);
-            } else if (val.equals("error")) {
-                // TODO: error
-                info.put(val, 0);
-            } else if (val.equals("errorString")) {
-                // TODO: errorString
-                info.put(val, "");
-            } else if (val.equals("eta")) {
-                long eta = s.getEstimatedTimeLeft();
-                info.put(val, eta);
-            } else if (val.equals("etaIdle")) {
-                // TODO: etaIdle
-                info.put(val, 0);
-            } else if (val.equals("files")) {
+                return dl;
+            }
+        });
+        addField(new LongField("eta"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                return s.getEstimatedTimeLeft();
+            }
+        });
+        addField(new JSONArrayField("files"){
+            JSONArray extractValue(Snark s, MetaInfo meta) {
                 Storage st = s.getStorage();
-                // make records
-                JSONArray json_files = new JSONArray();
+                JSONArray json_fileStats = new JSONArray();
                 if (st == null) {
-                    _log.warn("storage is null for torrent with id="+s.getLongID());
+                    _log.warn("storage is null for torrent with id="+s.getRPCID());
                 } else {
                     // for each file in this torrent
                     for ( File file : st.getFiles() ) {
@@ -130,25 +153,27 @@ public class TorrentGet extends AbstractRPCMethod {
                         JSONObject json_file = new JSONObject();
                         // get file's index
                         int idx = st.indexOf(file);
-                        // compute desired info
-                        long remaining = st.remaining(idx);
-                        long size = file.length();
-                        long completed = size - remaining;
-                        // put each value into the record
-                        json_file.put("size", size);
-                        json_file.put("bytesCompleted", completed);
-                        json_file.put("name", file.getName());
+                        // get our values
+                        long filesize = file.length();
+                        long completed = filesize - st.remaining(idx);
+                        String name = file.getName();
                         // put file record we made into the records
-                        json_files.put(json_file);
+                        json_file.put("bytesCompleted", completed);
+                        json_file.put("length", filesize);
+                        json_file.put("name", name);
+                        json_fileStats.put(json_file);
                     }
                 }
-                // put records into result
-                info.put(val, json_files);
-            } else if (val.equals("fileStats")) {
+                return json_fileStats;
+            }
+       });
+        
+       addField(new JSONArrayField("filesStats"){
+            JSONArray extractValue(Snark s, MetaInfo meta) {
                 Storage st = s.getStorage();
                 JSONArray json_fileStats = new JSONArray();
                 if (st == null) {
-                    _log.warn("storage is null for torrent with id="+s.getLongID());
+                    _log.warn("storage is null for torrent with id="+s.getRPCID());
                 } else {
                  // for each file in this torrent
                     for ( File file : st.getFiles() ) {
@@ -159,15 +184,230 @@ public class TorrentGet extends AbstractRPCMethod {
                         long completed = file.length() - st.remaining(idx);
                         // compute desired info
                         int priority = st.getPriority(idx);
+                        // this torrent is always enabled
+                        boolean wanted = true;
                         // put file record we made into the records
+                        json_file.put("bytesCompleted", completed);
+                        json_file.put("priority", priority);
+                        json_file.put("wanted", wanted);
                         json_fileStats.put(json_file);
                     }
-                    
                 }
-                info.put(val, json_fileStats);
+                return json_fileStats;
             }
+        });
+        addField(new DoubleField("leftUntilDone"){
+            Double extractValue(Snark s, MetaInfo meta) {
+                Storage st = s.getStorage();
+                double left = -1;
+                if (st != null && meta != null) {
+                    long total = meta.getTotalLength();
+                    long remaining = st.totalRemaining();
+                    long have = total - remaining;
+                    if (total > 0 ) {
+                        left = have / total;
+                    }
+                }
+                return left;
+            }
+        });
+        addField(new StringField("name"){
+            String extractValue(Snark s, MetaInfo meta) {
+                String name = null;
+                if (meta != null) {
+                    name = meta.getName();
+                }
+                return name;
+            }
+        });
+        addField(new LongField("peersGettingFromUs"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                long num = 0;
+                for (Peer p : s.getPeerList()) {
+                    if (p.isConnected() && p.getUploadRate() > 0) {
+                        num ++;
+                    }
+                }
+                return num;
+            }
+        });
+        addField(new LongField("peersSendingToUs"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                long num = 0;
+                for (Peer p : s.getPeerList()) {
+                    if (p.isConnected() && p.getDownloadRate() > 0) {
+                        num ++;
+                    }
+                }
+                return num;
+            }
+        });
+        addField(new LongField("rateDownload"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                return s.getDownloadRate();
+            }
+        });
+        addField(new LongField("rateUpload"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                return s.getUploadRate();
+            }
+        });
+        addField(new LongField("sizeWhenDone"){
+            Long extractValue(Snark s, MetaInfo meta) {
+                long size = 0;
+                if (meta != null) {
+                    size = meta.getTotalLength();
+                }
+                return size;
+            }
+        });
+        addField(new LongField("status"){
+           Long extractValue(Snark s, MetaInfo meta) {
+               if (s.isStopped()) {
+                   return (long) TorrentStatus.STOPPED;
+               } else if (s.isChecking() || s.isAllocating()) {
+                   return (long) TorrentStatus.CHECK;
+               } else if (s.getRemainingLength() == 0) {
+                   return (long) TorrentStatus.SEED;
+               } else {
+                   return (long) TorrentStatus.DOWNLOAD;
+               }
+           }
+        });
+        addField(new DoubleField("uploadRatio"){
+           Double extractValue(Snark s, MetaInfo meta) {
+               long uploaded = s.getUploaded();
+               long downloaded = s.getDownloaded();
+               if (downloaded == 0) {
+                   return 0.0;
+               } else {
+                   return new Double(uploaded) / new Double(downloaded);
+               }
+           }
+        });
+    }
+    
+    /**
+     * a field in a torrent-get request
+     * @author jeff
+     *
+     */
+    private abstract class Field<T> {
+        
+        final String _name;
+        
+        Field(String name) {
+            _name = name;
         }
-        return info;
+        
+        /** @return the name of this field */
+        String name() {
+            return _name;
+        }
+        /** extract the value of a field from a Snark */
+        T extractValue(Snark s, MetaInfo meta) {
+            return null;
+        }
+        
+        final T get(Snark s, MetaInfo meta) {
+            T val = extractValue(s, meta);
+            if ( val == null) {
+                val = getDefault();
+            }
+            return val;
+        }
+        
+        /** get the default value for this field */
+        abstract T getDefault();
+            
+    }
+    
+    private class BooleanField extends Field<Boolean> {
+        
+        private final boolean _default;
+        
+        BooleanField(String name) {
+            this(name, false);
+        }
+        
+        BooleanField(String name, Boolean defaultValue) {
+            super(name);
+            _default = defaultValue;
+        }
+
+        Boolean getDefault() {
+            return _default;
+        }
+    }
+    private class DoubleField extends Field<Double> {
+        
+        private final double _default;
+        
+        DoubleField(String name) {
+            this(name, 0.0);
+        }
+        
+        DoubleField(String name, double defaultValue) {
+            super(name);
+            _default = defaultValue;
+        }
+
+        Double getDefault() {
+            return _default;
+        }
+    }
+    
+    private class LongField extends Field<Long> {
+
+        private final long _default;
+        
+        LongField(String name) {
+            this(name, 0L);
+        }
+        
+        LongField(String name, long defaultValue) {
+            super(name);
+            _default = defaultValue;
+        }
+
+        @Override
+        Long getDefault() {
+            return _default;
+        }
+        
+    }
+    
+    private class StringField extends Field<String> {
+
+        private final String _default;
+        
+        StringField(String name, String defaultValue) {
+            super(name);
+            _default = defaultValue;
+        }
+        
+        StringField(String name) {
+            this(name, "??? ‾\\(._.)/‾ ???");
+        }
+
+        @Override
+        String getDefault() {
+            return _default;
+        }
+        
+    }
+    
+    private class JSONArrayField extends Field<JSONArray> {
+
+        JSONArrayField(String name) {
+            super(name);
+        }
+
+        @Override
+        JSONArray getDefault() {
+            return new JSONArray();
+        }
+        
     }
     
     @Override
@@ -178,28 +418,42 @@ public class TorrentGet extends AbstractRPCMethod {
         String result = null;
         JSONArray torrents = new JSONArray();
         // get the ids we are operating on
-        List<Long> ids = getIDs(manager, param);
+        List<Integer> ids = getIDs(manager, param);
         // get the fields that were requested
         JSONArray fields = param.getJSONArray("fields");
         // for each torrent desired
-        for ( Long id : ids ) {
-            Snark sn = manager.getTorrentByLongID(id);
+        for ( Integer id : ids ) {
+            Snark sn = manager.getTorrentById(id);
             if (sn == null) {
                 result = "no torrent with id "+id;
                 break;
             }
             // get the torrent info
-            JSONObject info = getTorrentInfo(sn, fields);
-            // we failed D:
-            if (info == null) {
-                result = "failed to get info for torrent with id: "+id;
-                break;
+            JSONObject info = new JSONObject();
+            for (Object o : fields) {
+                // assume that field values are always string
+                String field = o.toString();
+                if (field.equals("id")) {
+                 // put this snark's rpcid
+                 info.put("id", id);
+                } else if (_handlers.containsKey(field)) {
+                    // yah
+                    Field<? extends Object> handler = _handlers.get(field);
+                    // get the value for this field from the current Snark
+                    Object val = handler.get(sn, sn.getMetaInfo());
+                    // put the gotten value into the result for this Snark
+                    
+                    info.put(field, val);
+                } else {
+                    result = "i2psnark does not know how to handle field '"+field+"' in torrent-get method";
+                    break; 
+                }
             }
-            info.put("id", id);
-            // put it into the response
+            
+            // put the info into the response
             torrents.put(info);
         }
-
+        // we check for an error
         if (result == null) {
             // nothing bad happened
             // we gud, it succeeded
@@ -212,8 +466,10 @@ public class TorrentGet extends AbstractRPCMethod {
                 result_json.put("removed", removed);
             }
         } else {
+            // we got an error, log it and make sure the response is sent
             _log.warn("transmission-rpc torrent-get failed: "+result);
         }
+        // send response
         return new Result(result, result_json);
     }
     

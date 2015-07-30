@@ -369,6 +369,35 @@ public class Storage
   }
 
   /**
+   *  @return number of bytes remaining to be downloaded for all files
+   *  @since rpc
+   **/
+  public long totalRemaining() {
+      if (complete())
+          return 0;
+      long bytes = 0;
+      for (TorrentFile tf : _torrentFiles) {
+          int psz = piece_size;
+          long start = bytes;
+          long end = start + tf.length;
+          int pc = (int) (bytes / psz);
+          long rv = 0;
+          if (!bitfield.get(pc))
+              rv = Math.min(psz - (start % psz), tf.length);
+          for (int j = pc + 1; (((long)j) * psz) < end && j < pieces; j++) {
+              if (!bitfield.get(j)) {
+                  if (((long)(j+1))*psz < end)
+                      rv += psz;
+                  else
+                      rv += end - (((long)j) * psz);
+              }
+          }
+          bytes += rv;
+      }
+      return bytes;
+  }
+  
+  /**
    *  @param fileIndex as obtained from indexOf
    *  @since 0.8.1
    */

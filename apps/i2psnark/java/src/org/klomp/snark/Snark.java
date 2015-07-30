@@ -24,15 +24,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
-import java.util.StringTokenizer;
 
 import net.i2p.I2PAppContext;
 import net.i2p.client.streaming.I2PServerSocket;
-import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.util.Log;
 import net.i2p.util.SecureFile;
@@ -231,6 +227,7 @@ public class Snark
   private volatile boolean stopped;
   private volatile boolean starting;
   private final byte[] id;
+  private final int trpc_id;
   private final byte[] infoHash;
   private String additionalTrackerURL;
   protected final I2PSnarkUtil _util;
@@ -242,6 +239,8 @@ public class Snark
   // String indicating main activity
   private volatile String activity = "Not started";
   private final long savedUploaded;
+  // used with transmission rpc, effectively how many snarks we have made while running
+  private static int trpc_ids;
 
 
   /**
@@ -320,7 +319,7 @@ public class Snark
   {
     if (slistener == null)
       slistener = this;
-
+    trpc_id = trpc_ids++;
     completeListener = complistener;
     _util = util;
     _log = util.getContext().logManager().getLog(Snark.class);
@@ -504,7 +503,7 @@ public class Snark
     savedUploaded = 0;
     stopped = true;
     id = generateID();
-
+    trpc_id = trpc_ids++;
     // All we have is an infoHash
     // meta remains null
     // storage remains null
@@ -691,16 +690,15 @@ public class Snark
     public byte[] getID() {
         return id;
     }
-    
+
     /**
-     * @return the ID as a long 
+     * @return the id used with transmission rpc associated with this snark
      * @since rpc
      */
-    public long getLongID() {
-        // according to generateID the byte at index 11 is a 3 so it will never be negative 
-        return DataHelper.fromLong(id, 11, 8);
+    public int getRPCID() {
+        return trpc_id;
     }
-
+    
     /**
      *  @return always will be valid even in magnet mode
      *  @since 0.8.4

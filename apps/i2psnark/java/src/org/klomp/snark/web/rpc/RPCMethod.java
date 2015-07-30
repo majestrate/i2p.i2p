@@ -1,7 +1,6 @@
 package org.klomp.snark.web.rpc;
 
 import org.json.JSONObject;
-import org.klomp.snark.SnarkManager;
 
 /**
  * interface for transmission-rpc methods like torrent-set, torrent-get, etc 

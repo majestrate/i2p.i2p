@@ -13,14 +13,7 @@ import org.klomp.snark.web.SnarkRPCHandler;
  * @author jeff
  *
  */
-public abstract class SessionMethod implements RPCMethod {
-
-    @Override
-    public abstract String name();
-
-    @Override
-    public abstract Result call(RPCSession session, JSONObject params);
-
+public abstract class SessionMethod extends AbstractRPCMethod {
 
     /**
      * parse out all the parameters from a SnarkManager if params is null or just the ones in params if not null

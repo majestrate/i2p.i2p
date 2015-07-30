@@ -88,7 +88,7 @@ public class SnarkRPCHandler {
     /** write a json object as a response, convience */
     protected void respondJSON(JSONObject json_resp, HttpServletResponse resp) throws ServletException, IOException {
         // set headers
-        resp.setHeader("Content-Type", "text/json");
+        resp.setHeader("Content-Type", "application/json");
         // write out object
         Writer http_wr = resp.getWriter();
         json_resp.write(http_wr);
@@ -135,7 +135,10 @@ public class SnarkRPCHandler {
         }
     
         // get keys in the json request
-        String tag = json_req.optString("tag", null);
+        Object tag = null;
+        if ( json_req.has("tag")) {
+            tag = json_req.get("tag");
+        }
         String method = json_req.optString("method", null);
         JSONObject args = json_req.optJSONObject("arguments");
 

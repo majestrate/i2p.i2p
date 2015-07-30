@@ -1,6 +1,7 @@
 package org.klomp.snark.web.rpc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -17,23 +18,17 @@ import org.klomp.snark.SnarkManager;
  */
 public abstract class AbstractRPCMethod implements RPCMethod {
 
-    @Override
-    public abstract String name();
-
-    @Override
-    public abstract Result call(RPCSession session, JSONObject param);
-
     /**
      *
      * @return the list of IDs requested from the
      */
-    protected final List<Long> getIDs(SnarkManager manager, JSONObject param) {
+    protected final List<Integer> getIDs(SnarkManager manager, JSONObject param) {
         // do we have the ids parameter?
         if (param.has("ids")) {
             // yah
             // extract it
             Object obj = param.get("ids");
-            List<Long> ids = new ArrayList<Long>();
+            List<Integer> ids = new ArrayList<Integer>();
             // is it an array ?
             if (obj instanceof JSONArray ) {
                 // ya
@@ -42,11 +37,11 @@ public abstract class AbstractRPCMethod implements RPCMethod {
                 for (int idx = 0 ; idx < arr.length(); idx ++) {
                     // does not check for type
                     // XXX: is this bad?
-                    ids.add(arr.getLong(idx));
+                    ids.add(arr.getInt(idx));
                 }
-            } else if (obj instanceof Long ) {
+            } else if (obj instanceof Integer ) {
                 // it's just a long, add it
-                ids.add((Long) obj);
+                ids.add((Integer) obj);
             } else if (obj instanceof String) {
                 // it's a string
                 String str = obj.toString();
@@ -77,15 +72,16 @@ public abstract class AbstractRPCMethod implements RPCMethod {
     /**
      * @return every torrent's ID
      */
-    private List<Long> getAllTorrentIDs(SnarkManager manager) {
-        List<Long> ids = new ArrayList<Long>();
+    private List<Integer> getAllTorrentIDs(SnarkManager manager) {
+        List<Integer> ids = new ArrayList<Integer>();
         // synchronize access to manager
         // XXX: is this needed? it probably won't screw things up, but you never know...
         synchronized(manager) {
             for (Snark snark : manager.getTorrents()) {
-                ids.add(snark.getLongID());
+                ids.add(snark.getRPCID());
             }
         }
+        Collections.sort(ids);
         return ids;
     }
 }
