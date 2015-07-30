@@ -1434,7 +1434,9 @@ public class SnarkManager implements CompleteListener {
      * This verifies that a torrent with this infohash is not already added.
      * This may take a LONG time to create or check the storage.
      *
-     * Called from servlet. This is only for the 'create torrent' form.
+     * Called from servlet. This is called from the "create torrent" form in the 
+     * Snark webform and from the "torrent-add" method in transission-rpc, see
+     * org.klomp.snark.web.rpc.handlers.TorrentAdd
      *
      * @param metainfo the metainfo for the torrent
      * @param bitfield the current completion status of the torrent
