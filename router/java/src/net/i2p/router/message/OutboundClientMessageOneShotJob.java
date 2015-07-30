@@ -464,7 +464,7 @@ public class OutboundClientMessageOneShotJob extends JobImpl {
             return;
         }
 
-        _outTunnel = selectOutboundTunnel(_to);
+        _outTunnel = selectOutboundTunnel();
         if (_outTunnel == null) {
             if (_log.shouldLog(Log.WARN))
                 _log.warn(getJobId() + ": Could not find any outbound tunnels to send the payload through... this might take a while");
