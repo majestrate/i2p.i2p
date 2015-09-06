@@ -13,7 +13,7 @@ import org.klomp.snark.web.SnarkRPCHandler;
  * @author jeff
  *
  */
-public abstract class SessionMethod extends AbstractRPCMethod {
+public abstract class SessionMethod  {
 
     /**
      * parse out all the parameters from a SnarkManager if params is null or just the ones in params if not null

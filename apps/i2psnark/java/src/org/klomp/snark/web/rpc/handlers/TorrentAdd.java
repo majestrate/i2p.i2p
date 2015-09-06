@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Base64;
-import java.util.Base64.Decoder;
 
 import net.i2p.I2PAppContext;
 import net.i2p.data.ByteArray;
@@ -18,6 +17,11 @@ import org.klomp.snark.SnarkManager;
 import org.klomp.snark.web.rpc.RPCMethod;
 import org.klomp.snark.web.rpc.RPCSession;
 
+/**
+ * 
+ * @author jeff
+ * Implements the torrent-add function, allows transmission-rpc to add torrents
+ */
 public class TorrentAdd implements RPCMethod {
 
     private final Log _log;
@@ -49,7 +53,7 @@ public class TorrentAdd implements RPCMethod {
      * @return MetaInfo or null on error
      */
     private MetaInfo getMetaInfoBase64(String metainfo) {
-        Decoder decoder = Base64.getDecoder();
+        Base64.Decoder decoder = Base64.getDecoder();
         byte[] decoded = decoder.decode(metainfo);
         if(decoded == null) {
             return null;

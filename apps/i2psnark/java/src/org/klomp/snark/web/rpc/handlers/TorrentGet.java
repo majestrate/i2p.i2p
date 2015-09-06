@@ -22,7 +22,7 @@ import org.klomp.snark.web.rpc.RPCMethod;
 import org.klomp.snark.web.rpc.RPCSession;
 
 /**
- * implements transmission rpc's torrent-get method
+ * implements transmission rpc's torrent-get method, gets information about a torrent
  * @author jeff
  *
  */
@@ -216,6 +216,13 @@ public class TorrentGet implements RPCMethod {
                     name = meta.getName();
                 }
                 return name;
+            }
+        });
+        addField(new JSONArrayField("peers"){
+            JSONArray extractValid(Snark s, MetaInfo meta) {
+                JSONArray peers = new JSONArray();
+                
+                return peers;
             }
         });
         addField(new LongField("peersGettingFromUs"){
