@@ -2,7 +2,6 @@ package org.klomp.snark.web.rpc.handlers;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +19,7 @@ import org.klomp.snark.SnarkManager;
 import org.klomp.snark.Storage;
 import org.klomp.snark.web.rpc.RPCMethod;
 import org.klomp.snark.web.rpc.RPCSession;
+import org.klomp.snark.web.rpc.RPCUtil;
 
 /**
  * implements transmission rpc's torrent-get method, gets information about a torrent
@@ -44,7 +44,9 @@ public class TorrentGet implements RPCMethod {
     private void addField(Field<? extends Object> f) {
         _handlers.put(f.name(), f);
     }
+
     
+  
     /**
      * numeric status of a torrent
      * @author jeff
@@ -77,7 +79,6 @@ public class TorrentGet implements RPCMethod {
         addField(new LongField("etaIdle"));
         addField(new BooleanField("isFinished"));
         
-        // implemented fields
         addField(new StringField("comment"){
             String extractValue(Snark s, MetaInfo meta) {
                 String comment = null;
@@ -394,7 +395,7 @@ public class TorrentGet implements RPCMethod {
         }
         
         StringField(String name) {
-            this(name, "??? ‾\\(._.)/‾ ???");
+            this(name, "???");
         }
 
         @Override
@@ -425,7 +426,7 @@ public class TorrentGet implements RPCMethod {
         String result = null;
         JSONArray torrents = new JSONArray();
         // get the ids we are operating on
-        List<Integer> ids = getIDs(manager, param);
+        List<Integer> ids = RPCUtil.getIDs(manager, param);
         // get the fields that were requested
         JSONArray fields = param.getJSONArray("fields");
         // for each torrent desired
@@ -480,66 +481,4 @@ public class TorrentGet implements RPCMethod {
         return new Result(result, result_json);
     }
     
-    /**
-    *
-    * @return the list of IDs requested from the
-    */
-    protected final List<Integer> getIDs(SnarkManager manager, JSONObject param) {
-        // do we have the ids parameter?
-        if (param.has("ids")) {
-            // yah
-            // extract it
-            Object obj = param.get("ids");
-            List<Integer> ids = new ArrayList<Integer>();
-            // is it an array ?
-            if (obj instanceof JSONArray ) {
-                // ya
-                // grab all the values
-                JSONArray arr = (JSONArray) obj;
-                for (int idx = 0 ; idx < arr.length(); idx ++) {
-                    // does not check for type
-                    // XXX: is this bad?
-                    ids.add(arr.getInt(idx));
-                }
-            } else if (obj instanceof Integer ) {
-                // it's just a long, add it
-                ids.add((Integer) obj);
-            } else if (obj instanceof String) {
-                // it's a string
-                String str = obj.toString();
-                // is it 'recently-active' ?
-                if (str.equalsIgnoreCase("recently-active")) {
-                    // yah
-                    // get all torrents because we don't have any way of detecting activity right now
-                    // TODO: check for active torrents
-                    return getAllTorrentIDs(manager);
-                } else {
-                    // nah, we don't know what this means so throw
-                    throw new JSONException(String.format("id value was invalid string '%s'", str));
-                }
-            } else {
-                // this is an invalid type wtf?
-                throw new JSONException("ids was invalid type: "+obj.getClass().getCanonicalName());
-            }
-            // return what we got
-            return ids;
-        } else {
-            // nah we don't have the ids parameter
-            // just send everything :^)
-            return getAllTorrentIDs(manager);
-        }
-    }
-    /**
-     * @return every torrent's ID
-     */
-    private List<Integer> getAllTorrentIDs(SnarkManager manager) {
-        List<Integer> ids = new ArrayList<Integer>();
-        
-        for (Snark snark : manager.getTorrents()) {
-            ids.add(snark.getRPCID());
-        }
-        // sort them so transmission-remote displays it nice
-        Collections.sort(ids);
-        return ids;
-    }
 }

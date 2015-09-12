@@ -41,7 +41,7 @@ public abstract class SessionMethod  {
     /**
      * Arguments for session-* methods with defaults
      * @author jeff
-     * @see https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt#L446
+     * @see https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt
      *
      */
     protected static class Arguments extends ConcurrentHashMap<String, String> {
