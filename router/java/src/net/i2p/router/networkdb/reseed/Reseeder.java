@@ -89,7 +89,7 @@ public class Reseeder {
     /** @since 0.8.2 */
     public static final String DEFAULT_SSL_SEED_URL =
               "https://reseed.i2p-projekt.de/" + "," + // Only HTTPS
-              "https://netdb.rows.io:444/" + "," + // Only HTTPS and SU3 (v3) support
+              //"https://netdb.rows.io:444/" + "," + // Only HTTPS and SU3 (v3) support
               "https://i2pseed.zarrenspry.info/" + "," + // Only HTTPS and SU3 (v3) support
               "https://i2p.mooo.com/netDb/" + "," +
               // ticket #1596
@@ -98,7 +98,7 @@ public class Reseeder {
               "https://us.reseed.i2p2.no:444/" + "," +
               "https://uk.reseed.i2p2.no:444/" + "," +
               "https://reseed.i2p.vzaws.com:8443/" + ", " + // Only SU3 (v3) support
-              "https://link.mx24.eu/" + "," + // Only HTTPS and SU3 (v3) support
+              "https://user.mx24.eu/" + "," + // Only HTTPS and SU3 (v3) support
               "https://ieb9oopo.mooo.com/"; // Only HTTPS and SU3 (v3) support
 
     private static final String SU3_FILENAME = "i2pseeds.su3";

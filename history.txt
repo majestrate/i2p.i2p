@@ -1,3 +1,42 @@
+* 2015-09-12 0.9.22 released
+
+2015-09-11 kytv
+ * Updates to geoip.txt and geoipv6.dat.gz based on Maxmind GeoLite Country
+   database from 2015-09-02.
+ * Translation updates pulled from Transifex
+
+2015-09-04 zzz
+ * UPnP: Fix "content not allowed in trailing section"
+   (tickets #481, #1653)
+
+2015-08-31 zzz
+ * Data: Cache P256 and Ed255i9 key certificates
+ * i2psnark: Change default sig type to Ed25519
+
+2015-08-29 zzz
+ * Router:
+   - Change default RI sig type to Ed25519, with a 10% chance od
+     rekeying from DSA at each restart
+   - Don't initialize KeyManager before selecting sig type
+   - Don't log KeyManager error when changing sig type
+
+2015-08-25 zzz
+ * i2psnark:
+   - Return partial piece to coordinator after reject
+   - Fix tracking of downloaded portion of piece after reject
+   - Send reject on receipt of bad request
+   - Mark piece unrequested after receiving bad data, so it
+     will be requested again, but not from the same peer
+   - Fix NPE in Request constructor on error
+   - Fix stuck before completion due to reject handling (ticket #1633)
+   - Fix orphaned temp files due to reject handling (ticket #1635)
+
+2015-08-02 zzz
+ * Console: Fix SSL excluded ciphers (thx lazyg)
+ * SU3File: Add keystore password command line option
+
+* 2015-07-31 0.9.21 released
+
 2015-07-27 zzz
  * Update: Fix processing of translated news su3 files
 
