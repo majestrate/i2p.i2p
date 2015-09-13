@@ -70,7 +70,7 @@ public class I2PSnarkServlet extends BasicServlet {
     
     private static final String PROP_RPC_ENABLE = "i2psnark.rpc.enable";
     private static final String PROP_RPC_PATH = "i2psnark.rpc.path";
-    private static final String DEFAULT_RPC_PATH = "/.rpc/rpc/";
+    private static final String DEFAULT_RPC_PATH = "/.rpc/rpc";
     
     public I2PSnarkServlet() {
         super();
@@ -205,7 +205,7 @@ public class I2PSnarkServlet extends BasicServlet {
         }
 
         // handle transmission rpc
-        if (_rpcPath != null && _rpcPath.equals(path)) {
+        if (_rpcPath != null && ( _rpcPath.equals(path) || (_rpcPath+"/").equals(path) ) ) {
           if ( method.equals("POST") ) {
             if (_rpcHandler == null) {
               // it's disabled, tell them it's not found
