@@ -75,8 +75,8 @@
                 <attribute name="Workspace-Changes" value="${workspace.changes.tr}" />
             </manifest>
         </jar>
-    </target>    
-    
+    </target>
+
     <target name="jarUpToDate">
         <uptodate property="jar.uptodate" targetfile="build/i2psnark.jar" >
             <srcfiles dir= "build/obj" includes="**/*.class" excludes="**/web/* **/messages_*.class" />
@@ -105,8 +105,14 @@
         <!-- set if unset -->
         <property name="workspace.changes.tr" value="" />
         <copy todir="build/resources/.resources" >
-            <fileset dir="../resources/" />
+             <fileset dir="../resources/" />
         </copy>
+        <!-- files for standalone snark (psi) -->
+        <mkdir dir="build/resources/.resources/themes/snark" />
+        <copy todir="build/resources/.resources/themes/snark" >
+             <fileset dir="../../../installer/resources/themes/snark/" />
+        </copy>
+
         <!-- mime.properties must be in with the classes -->
         <copy file="../mime.properties" todir="build/obj/org/klomp/snark/web" />
         <war destfile="../i2psnark.war" webxml="../web.xml" >
@@ -166,32 +172,39 @@
           <zipfileset dir="./dist/" prefix="i2psnark/" />
         </zip>
     </target>
-    <target name="standalone_prep" depends="war">
+
+    <!-- make a fat jar for standalone -->
+    <target name="standalone_jar" depends="war">
+      <jar destfile="build/i2psnark-standalone.jar">
+        <zipfileset src="build/i2psnark.jar" />
+        <zipfileset src="../../../core/java/build/i2p.jar" />
+        <zipfileset src="../../jetty/jettylib/commons-el.jar" />
+        <zipfileset src="../../jetty/jettylib/commons-logging.jar" />
+        <zipfileset src="../../jetty/jettylib/javax.servlet.jar" />
+        <zipfileset src="../../jetty/jettylib/org.mortbay.jetty.jar"  />
+        <zipfileset src="../../jetty/jettylib/jasper-runtime.jar"  />
+        <zipfileset src="../../jetty/jettylib/jetty-webapp.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-util.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-servlet.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-http.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-io.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-security.jar"  />
+        <zipfileset src="../../jetty/jettylib/jetty-xml.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-i2p.jar" />
+        <zipfileset src="../../jetty/jettylib/jetty-continuation.jar" />
+        <zipfileset src="../../ministreaming/java/build/mstreaming.jar" />
+        <zipfileset src="../../streaming/java/build/streaming.jar" />
+        <manifest>
+          <attribute name="Main-Class" value="org.klomp.snark.RunStandalone"/>
+        </manifest>
+      </jar>
+    </target>
+    
+    <target name="standalone_prep" depends="standalone_jar">
         <delete dir="./dist" />
         <mkdir dir="./dist" />
-        <copy file="../launch-i2psnark" todir="./dist/" />
-        <mkdir dir="./dist/webapps" />
-        <copy file="../i2psnark.war" tofile="./dist/webapps/i2psnark.war" />
-        <mkdir dir="./dist/lib" />
-        <copy file="./build/i2psnark.jar" tofile="./dist/lib/i2psnark.jar" />
-        <copy file="../../../core/java/build/i2p.jar" tofile="./dist/lib/i2p.jar" />
-        <copy file="../../jetty/jettylib/commons-el.jar" tofile="./dist/lib/commons-el.jar" />
-        <copy file="../../jetty/jettylib/commons-logging.jar" tofile="./dist/lib/commons-logging.jar" />
-        <copy file="../../jetty/jettylib/javax.servlet.jar" tofile="./dist/lib/javax.servlet.jar" />
-        <copy file="../../jetty/jettylib/org.mortbay.jetty.jar" tofile="./dist/lib/org.mortbay.jetty.jar" />
-        <copy file="../../jetty/jettylib/jasper-runtime.jar" tofile="./dist/lib/jasper-runtime.jar" />
-        <copy file="../../jetty/jettylib/jetty-webapp.jar" tofile="./dist/lib/jetty-webapp.jar" />
-        <copy file="../../jetty/jettylib/jetty-util.jar" tofile="./dist/lib/jetty-util.jar" />
-        <copy file="../../jetty/jettylib/jetty-servlet.jar" tofile="./dist/lib/jetty-servlet.jar" />
-        <copy file="../../jetty/jettylib/jetty-http.jar" tofile="./dist/lib/jetty-http.jar" />
-        <copy file="../../jetty/jettylib/jetty-io.jar" tofile="./dist/lib/jetty-io.jar" />
-        <copy file="../../jetty/jettylib/jetty-security.jar" tofile="./dist/lib/jetty-security.jar" />
-        <copy file="../../jetty/jettylib/jetty-xml.jar" tofile="./dist/lib/jetty-xml.jar" />
-        <copy file="../../jetty/jettylib/jetty-i2p.jar" tofile="./dist/lib/jetty-i2p.jar" />
-        <copy file="../../jetty/jettylib/jetty-continuation.jar" tofile="./dist/lib/jetty-continuation.jar" />
-        <copy file="../../ministreaming/java/build/mstreaming.jar" tofile="./dist/lib/mstreaming.jar" />
-        <copy file="../../streaming/java/build/streaming.jar" tofile="./dist/lib/streaming.jar" />
-        <copy file="../jetty-i2psnark.xml" tofile="./dist/jetty-i2psnark.xml" />
+        <copy file="../i2psnark.war" tofile="./dist/i2psnark.war" />
+        <copy file="./build/i2psnark-standalone.jar" tofile="./dist/i2psnark.jar" />
         <copy file="../readme-standalone.txt" tofile="./dist/readme.txt" />
         <mkdir dir="./dist/logs" />
 

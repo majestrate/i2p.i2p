@@ -13,19 +13,17 @@ public class RunStandalone {
     private final File warfile;
     private final Server _server;
     private RunStandalone(String args[]) {
-        int port = 18009;
+        int port = 1888;
         String host = "127.0.0.1";
-        if (args.length > 2) {
-            port = Integer.parseInt(args[2]);
-        } 
+        
         if (args.length > 1) {
-            host = args[1];
-        }
+            port = Integer.parseInt(args[1]);
+        } 
         if (args.length > 0) {
-            warfile = new File(args[0]);
-        } else {
-            warfile = new File("webapps","i2psnark.war");
+            host = args[0];
         }
+
+        warfile = new File("i2psnark.war");
         _server = new Server(new InetSocketAddress(host, port));
     }
     
@@ -39,6 +37,7 @@ public class RunStandalone {
         
             
         WebAppContext webapp = new WebAppContext();
+        //TODO: make this configurable?
         webapp.setContextPath("/i2psnark");
         webapp.setWar(warfile.getAbsolutePath());
         _server.setHandler(webapp);

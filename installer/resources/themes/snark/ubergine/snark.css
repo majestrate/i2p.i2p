@@ -2,7 +2,7 @@
 /* Guantanamo Commemorative Edition. */
 
 body {
-     background: #101 url('/themes/snark/ubergine/images/graytile.png');
+     background: #101 url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png');
      color: #001;
      font: 7.5pt "Lucida Sans Unicode","Bitstream Vera Sans",Verdana,Tahoma,Helvetica,sans-serif;
 }
@@ -28,8 +28,8 @@ body.iframed {
      font-size: 9pt;
      color: #f70;
      text-shadow: 1px 1px #420;
-     background: url('/themes/snark/ubergine/images/snarknav_lowlight.png') no-repeat scroll center bottom;
-     background: #310 url('/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
+     background: url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav_lowlight.png') no-repeat scroll center bottom;
+     background: #310 url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
      -moz-border-radius: 0px;
      -khtml-border-radius: 3px;
      border-radius: 0px;;
@@ -45,8 +45,8 @@ body.iframed {
      padding: 1px 16px;
      font-weight: bold;
      color: #f50;
-     background: #310 url('/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
-     background: #310 url('/themes/snark/ubergine/images/snarknav_lowlight.png') repeat-x scroll center center;
+     background: #310 url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
+     background: #310 url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav_lowlight.png') repeat-x scroll center center;
      -moz-border-radius: 0;
      -khtml-border-radius: 0;
      border-radius: 0;
@@ -61,7 +61,7 @@ body.iframed {
      padding: 0 16px;
      font-weight: bold;
      color: #fb0;
-     background: #310 url('/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
+     background: #310 url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav_on.png') repeat-x scroll center center;
 }
 
 .snarkRefresh:last-child {
@@ -97,7 +97,7 @@ body.iframed {
      max-height: 76px;
      min-height: 45px;
      width: auto;
-     background: #2a192a url('/themes/snark/ubergine/images/hat.png') no-repeat scroll right center;
+     background: #2a192a url('/i2psnark/.resources/themes/snark/ubergine/images/hat.png') no-repeat scroll right center;
 }
 
 .snarkMessages a:link, .snarkMessages a:visited {
@@ -466,7 +466,7 @@ table.SnarkDirInfo {
      border-radius: 0 0 5px 5px;
      border-top: 0;
      text-shadow: 0px 3px 5px #323;
-     background: #101 url('/themes/snark/ubergine/images/snarknav.png') repeat-x scroll center center !important;
+     background: #101 url('/i2psnark/.resources/themes/snark/ubergine/images/snarknav.png') repeat-x scroll center center !important;
      font-variant: small-caps !important;
 }
 
@@ -476,7 +476,7 @@ table.SnarkDirInfo {
 }
 
 .page {
-     background: #323 url('/themes/snark/ubergine/images/tile2.png');
+     background: #323 url('/i2psnark/.resources/themes/snark/ubergine/images/tile2.png');
      color: #310;
      min-width: 800px !important;
      margin: 5px 0 0 0;
@@ -573,14 +573,14 @@ input {
      -khtml-border-radius: 4px;
      border-radius: 4px;
      border: 1px inset #000;
-     background: #212 url('/themes/snark/ubergine/images/graytile.png');	 
+     background: #212 url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png');	 
      color: #f60;
      margin: 2px 4px;
 }
 
 input.r {
      text-align: right;
-     background: url('/themes/snark/ubergine/images/graytile.png');
+     background: url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png');
 }
 
 input[type=submit] {
@@ -688,7 +688,7 @@ input.reload {
 
 select {
      background: #333;
-     background: url('/themes/snark/ubergine/images/graytile.png') !important;
+     background: url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png') !important;
      color: #f60;
      font: 8pt "Lucida Sans Unicode","Bitstream Vera Sans",Verdana,Tahoma,Helvetica,sans-serif;
      font-weight: bold;
@@ -705,7 +705,7 @@ select:hover, textarea:hover {
 }
 
 textarea {
-     background: #111 url('/themes/snark/ubergine/images/graytile.png');
+     background: #111 url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png');
      color: #f60;
      font-weight: bold;
      padding: 1px 4px 0px;
@@ -775,7 +775,7 @@ div.newtorrentsection {
      -khtml-box-shadow: inset 0px 0px 1px 0px #101;
      box-shadow: inset 0px 0px 1px 0px #101;
      word-wrap: break-word;
-     background: #545 url('/themes/snark/ubergine/images/snark_create.png') no-repeat scroll right center;
+     background: #545 url('/i2psnark/.resources/themes/snark/ubergine/images/snark_create.png') no-repeat scroll right center;
      opacity: 1.0;
 }
 
@@ -792,7 +792,7 @@ div.addtorrentsection {
      -khtml-box-shadow: inset 0px 0px 1px 0px #101;
      box-shadow: inset 0px 0px 1px 0px #101;
      word-wrap: break-word;
-     background: #545 url('/themes/snark/ubergine/images/snark_add.png') no-repeat scroll right center;
+     background: #545 url('/i2psnark/.resources/themes/snark/ubergine/images/snark_add.png') no-repeat scroll right center;
      opacity: 1.0;
 }
 
@@ -826,7 +826,7 @@ div.configsectionpanel {
      box-shadow: inset 0px 0px 1px 0px #101;
      word-wrap: break-word;
      text-align: center;
-     background: #545 url('/themes/snark/ubergine/images/configuration.png') no-repeat scroll right center;
+     background: #545 url('/i2psnark/.resources/themes/snark/ubergine/images/configuration.png') no-repeat scroll right center;
      font-weight: bold;
 }
 
@@ -866,7 +866,7 @@ code {
      -moz-box-shadow: inset 0px 0px 1px 0px #002;
      -khtml-box-shadow: inset 0px 0px 1px 0px #002;
      box-shadow: inset 0px 0px 1px 0px #002;
-     background: #101 url('/themes/snark/ubergine/images/snarktopnav.png') repeat-x scroll center center;
+     background: #101 url('/i2psnark/.resources/themes/snark/ubergine/images/snarktopnav.png') repeat-x scroll center center;
      text-transform: uppercase !important;
      letter-spacing: 0.065em !important;
      font-weight: bold;

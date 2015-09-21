@@ -103,7 +103,7 @@ body.iframed {
      max-height: 76px;
      min-height: 45px;
      width: auto;
-     background: #eda url('/themes/snark/ubergine/images/hat.png') no-repeat scroll right center;
+     background: #eda url('/i2psnark/.resources/themes/snark/ubergine/images/hat.png') no-repeat scroll right center;
 }
 
 .snarkMessages a:link {
@@ -590,7 +590,7 @@ input {
      -khtml-border-radius: 4px;
      border-radius: 4px;
      border: 1px inset #000;
-     background: #fff /*url('/themes/snark/ubergine/images/graytile.png')*/;	 
+     background: #fff /*url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png')*/;	 
      color: #000;
      margin: 2px 4px;
 }
@@ -696,7 +696,7 @@ input.reload {
 
 select {
      background: #fff;
-/*     background: url('/themes/snark/ubergine/images/graytile.png') !important;*/
+/*     background: url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png') !important;*/
      color: #101;
      font: 8pt "Lucida Sans Unicode","Bitstream Vera Sans",Verdana,Tahoma,Helvetica,sans-serif;
      font-weight: bold;
@@ -714,7 +714,7 @@ select:hover, textarea:hover {
 }
 
 textarea {
-     background: #fff; /*url('/themes/snark/ubergine/images/graytile.png');*/
+     background: #fff; /*url('/i2psnark/.resources/themes/snark/ubergine/images/graytile.png');*/
      color: #f60;
      font-weight: bold;
      padding: 1px 4px 0px;
@@ -836,7 +836,7 @@ div.configsectionpanel {
      box-shadow: inset 0px 0px 1px 0px #fff;
      word-wrap: break-word;
      text-align: center;
-     background: #ffd url('/themes/snark/ubergine/images/configuration.png') no-repeat scroll right center;
+     background: #ffd url('/i2psnark/.resources/themes/snark/ubergine/images/configuration.png') no-repeat scroll right center;
      font-weight: bold;
 }
 

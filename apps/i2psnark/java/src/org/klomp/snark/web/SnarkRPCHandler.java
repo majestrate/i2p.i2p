@@ -119,8 +119,7 @@ public class SnarkRPCHandler {
         JSONTokener json = new JSONTokener(req.getInputStream());
         // parse request
         JSONObject json_req;
-        try {
-            
+        try {            
             json_req = new JSONObject(json);
         } catch (JSONException thrown) {
             // error parsing
