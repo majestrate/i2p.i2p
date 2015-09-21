@@ -149,6 +149,7 @@ public class TorrentGet implements RPCMethod {
                 if (st == null) {
                     _log.warn("storage is null for torrent with id="+s.getRPCID());
                 } else {
+                    long[] remaining_sizes = st.remaining();
                     // for each file in this torrent
                     for ( File file : st.getFiles() ) {
                         // prepare file record
@@ -157,7 +158,7 @@ public class TorrentGet implements RPCMethod {
                         int idx = st.indexOf(file);
                         // get our values
                         long filesize = file.length();
-                        long completed = filesize - st.remaining(idx);
+                        long completed = filesize - remaining_sizes[idx];
                         String name = file.getName();
                         // put file record we made into the records
                         json_file.put("bytesCompleted", completed);
@@ -177,13 +178,14 @@ public class TorrentGet implements RPCMethod {
                 if (st == null) {
                     _log.warn("storage is null for torrent with id="+s.getRPCID());
                 } else {
-                 // for each file in this torrent
+                    // for each file in this torrent
+                    long [] remaining_sizes = st.remaining();
                     for ( File file : st.getFiles() ) {
                         // prepare file record
                         JSONObject json_file = new JSONObject();
                         // get file's index
                         int idx = st.indexOf(file);
-                        long completed = file.length() - st.remaining(idx);
+                        long completed = file.length() - remaining_sizes[idx];
                         // compute desired info
                         int priority = st.getPriority(idx);
                         // this torrent is always enabled
