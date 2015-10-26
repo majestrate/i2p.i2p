@@ -37,7 +37,6 @@ public class RunStandalone {
         
             
         WebAppContext webapp = new WebAppContext();
-        //TODO: make this configurable?
         webapp.setContextPath("/i2psnark");
         webapp.setWar(warfile.getAbsolutePath());
         _server.setHandler(webapp);

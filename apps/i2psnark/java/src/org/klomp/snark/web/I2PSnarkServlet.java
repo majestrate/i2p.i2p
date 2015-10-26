@@ -60,6 +60,7 @@ public class I2PSnarkServlet extends BasicServlet {
     private String _themePath;
     private String _imgPath;
     private String _lastAnnounceURL;
+    private boolean _standalone;
     
     /** jsonrpc handler **/
     private SnarkRPCHandler _rpcHandler;
@@ -73,6 +74,10 @@ public class I2PSnarkServlet extends BasicServlet {
     private static final String PROP_RPC_ENABLE = "i2psnark.rpc.enable";
     private static final String PROP_RPC_PATH = "i2psnark.rpc.path";
     private static final String DEFAULT_RPC_PATH = "/.rpc/rpc";
+
+    /** property name for indicating we are running in standalone mode */
+    private static final String PROP_STANDALONE_MODE = "i2psnark.standalone";
+        
     
     public I2PSnarkServlet() {
         super();
@@ -100,6 +105,9 @@ public class I2PSnarkServlet extends BasicServlet {
         loadMimeMap("org/klomp/snark/web/mime");
         setResourceBase(_manager.getDataDir());
         setWarBase(WARBASE);
+
+        // check if we are in standalone mode
+        _standalone = _context.getProperty(PROP_STANDALONE_MODE, true);
         
         if (_context.getProperty(PROP_RPC_ENABLE, true)) {
           // set up rpc 
@@ -222,7 +230,7 @@ public class I2PSnarkServlet extends BasicServlet {
           }
           return;
         }
-        
+
         _themePath = _contextPath + WARBASE + "themes/snark/" + _manager.getTheme() + '/';
         _imgPath = _themePath + "images/";
         req.setCharacterEncoding("UTF-8");
@@ -357,17 +365,27 @@ public class I2PSnarkServlet extends BasicServlet {
                 out.write(_t("I2PSnark"));
             else
                 out.write(_contextName);
-            out.write("</a> <a href=\"http://forum.i2p/viewforum.php?f=21\" class=\"snarkRefresh\" target=\"_blank\">");
-            out.write(_t("Forum"));
-            out.write("</a>\n");
-
+            out.write("</a>");
+            
             sortedTrackers = _manager.getSortedTrackers();
-            for (Tracker t : sortedTrackers) {
-                if (t.baseURL == null || !t.baseURL.startsWith("http"))
-                    continue;
-                if (_manager.util().isKnownOpenTracker(t.announceURL))
-                    continue;
-                out.write(" <a href=\"" + t.baseURL + "\" class=\"snarkRefresh\" target=\"_blank\">" + t.name + "</a>");
+            
+            if (_standalone) {
+                // we are in standalone mode
+                // TODO: maybe put other links here
+                
+            } else {
+                // we are not in standalone mode
+                // write out tracker links
+                out.write("<a href=\"http://forum.i2p/viewforum.php?f=21\" class=\"snarkRefresh\" target=\"_blank\">");
+                out.write(_t("Forum"));
+                out.write("</a>\n");
+                for (Tracker t : sortedTrackers) {
+                    if (t.baseURL == null || !t.baseURL.startsWith("http"))
+                        continue;
+                    if (_manager.util().isKnownOpenTracker(t.announceURL))
+                        continue;
+                    out.write(" <a href=\"" + t.baseURL + "\" class=\"snarkRefresh\" target=\"_blank\">" + t.name + "</a>");
+                }
             }
         }
         out.write("</div>\n");
