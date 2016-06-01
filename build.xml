@@ -1809,7 +1809,7 @@
         <ant dir="apps/syndie/java/" target="standalone" />
         <copy file="apps/syndie/java/syndie-standalone.zip" todir="." />
     </target> -->
-    <target name="i2psnark" depends="buildProperties" >
+    <target name="i2psnark" depends="buildProperties, buildStreaming, buildJetty" >
         <ant dir="apps/i2psnark/java" target="standalone" />
         <copy file="apps/i2psnark/java/i2psnark-standalone.zip" todir="." />
     </target>
