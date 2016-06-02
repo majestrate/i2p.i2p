@@ -188,6 +188,7 @@
         <mkdir dir="./dist/lib" />
         <copy file="./build/i2psnark.jar" tofile="./dist/lib/i2psnark.jar" />
         <copy file="../../../core/java/build/i2p.jar" tofile="./dist/lib/i2p.jar" />
+        <copy file="../../jetty/jettylib/jetty-i2p.jar" tofile="./dist/lib/jetty-i2p.jar" />
         <copy file="../../jetty/jettylib/commons-el.jar" tofile="./dist/lib/commons-el.jar" />
         <copy file="../../jetty/jettylib/commons-logging.jar" tofile="./dist/lib/commons-logging.jar" />
         <copy file="../../jetty/jettylib/javax.servlet.jar" tofile="./dist/lib/javax.servlet.jar" />
