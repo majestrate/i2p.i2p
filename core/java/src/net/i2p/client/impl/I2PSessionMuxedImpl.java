@@ -280,14 +280,7 @@ class I2PSessionMuxedImpl extends I2PSessionImpl2 {
      * @since 0.9.14
      */
     private byte[] prepPayload(byte[] payload, int offset, int size, int proto, int fromPort, int toPort) throws I2PSessionException {
-        synchronized (_stateLock) {
-            if (_state == State.CLOSED)
-                throw new I2PSessionException("Already closed");
-            if (_state == State.INIT)
-                throw new I2PSessionException("Not open, must call connect() first");
-            if (_state == State.OPENING || _state == State.GOTDATE) // not before GOTDATE or session
-                throw new I2PSessionException("Session not open yet");
-        }
+        verifyOpen();
         updateActivity();
 
         if (shouldCompress(size))
@@ -406,7 +399,7 @@ class I2PSessionMuxedImpl extends I2PSessionImpl2 {
                 try {
                     _demultiplexer.messageAvailable(I2PSessionMuxedImpl.this,
                         msg.id, msg.size, msg.proto, msg.fromPort, msg.toPort);
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     _log.error("Error notifying app of message availability", e);
                 }
             }

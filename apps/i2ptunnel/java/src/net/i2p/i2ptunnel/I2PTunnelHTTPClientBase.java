@@ -41,6 +41,7 @@ import net.i2p.util.EventDispatcher;
 import net.i2p.util.InternalSocket;
 import net.i2p.util.Log;
 import net.i2p.util.PasswordManager;
+import net.i2p.util.PortMapper;
 import net.i2p.util.Translate;
 import net.i2p.util.TranslateReader;
 
@@ -285,7 +286,7 @@ public abstract class I2PTunnelHTTPClientBase extends I2PTunnelClientBase implem
                 // We send Accept-Charset: UTF-8 in the 407 so hopefully it comes back that way inside the B64 ?
                 try {
                     String dec = new String(decoded, "UTF-8");
-                    String[] parts = dec.split(":");
+                    String[] parts = DataHelper.split(dec, ":");
                     String user = parts[0];
                     String pw = parts[1];
                     // first try pw for that user
@@ -462,6 +463,7 @@ public abstract class I2PTunnelHTTPClientBase extends I2PTunnelClientBase implem
             " realm=\"" + getRealm() + '"' +
             (isDigest ? ", nonce=\"" + getNonce() + "\"," +
                         " algorithm=MD5," +
+                        " charset=UTF-8," +     // RFC 7616/7617
                         " qop=\"auth\"" +
                         (isStale ? ", stale=true" : "")
                       : "") +
@@ -535,7 +537,24 @@ public abstract class I2PTunnelHTTPClientBase extends I2PTunnelClientBase implem
             while((len = reader.read(buf)) > 0) {
                 out.append(buf, 0, len);
             }
-            return out.toString();
+            String rv = out.toString();
+            // Do we need to replace http://127.0.0.1:7657 console links in the error page?
+            // Get the registered host and port from the PortMapper.
+            final String unset = "*unset*";
+            final String httpHost = ctx.portMapper().getActualHost(PortMapper.SVC_CONSOLE, unset);
+            final String httpsHost = ctx.portMapper().getActualHost(PortMapper.SVC_HTTPS_CONSOLE, unset);
+            final int httpPort = ctx.portMapper().getPort(PortMapper.SVC_CONSOLE, 7657);
+            final int httpsPort = ctx.portMapper().getPort(PortMapper.SVC_HTTPS_CONSOLE, -1);
+            final boolean httpsOnly = httpsPort > 0 && httpHost.equals(unset) && !httpsHost.equals(unset);
+            final int port = httpsOnly ? httpsPort : httpPort;
+            String host = httpsOnly ? httpsHost : httpHost;
+            if (host.equals(unset))
+                host = "127.0.0.1";
+            if (httpsOnly || port != 7657 || !host.equals("127.0.0.1")) {
+                String url = (httpsOnly ? "https://" : "http://") + host + ':' + port;
+                rv = rv.replace("http://127.0.0.1:7657", url);
+            }
+            return rv;
         } finally {
             try {
                 if(reader != null)

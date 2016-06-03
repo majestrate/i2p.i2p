@@ -54,6 +54,7 @@ public class PersistentDataStore extends TransientDataStore {
     private final ReadJob _readJob;
     private volatile boolean _initialized;
     private final boolean _flat;
+    private final int _networkID;
     
     private final static int READ_DELAY = 2*60*1000;
     private static final String PROP_FLAT = "router.networkDatabase.flat";
@@ -65,6 +66,7 @@ public class PersistentDataStore extends TransientDataStore {
      */
     public PersistentDataStore(RouterContext ctx, String dbDir, KademliaNetworkDatabaseFacade facade) throws IOException {
         super(ctx);
+        _networkID = ctx.router().getNetworkID();
         _flat = ctx.getBooleanProperty(PROP_FLAT);
         _dbDir = getDbDir(dbDir);
         _facade = facade;
@@ -165,7 +167,7 @@ public class PersistentDataStore extends TransientDataStore {
     }
     
     private class RemoveJob extends JobImpl {
-        private Hash _key;
+        private final Hash _key;
         public RemoveJob(Hash key) {
             super(PersistentDataStore.this._context);
             _key = key;
@@ -505,7 +507,7 @@ public class PersistentDataStore extends TransientDataStore {
                     fis = new BufferedInputStream(fis);
                     RouterInfo ri = new RouterInfo();
                     ri.readBytes(fis, true);  // true = verify sig on read
-                    if (ri.getNetworkId() != Router.NETWORK_ID) {
+                    if (ri.getNetworkId() != _networkID) {
                         corrupt = true;
                         if (_log.shouldLog(Log.ERROR))
                             _log.error("The router "
@@ -543,7 +545,7 @@ public class PersistentDataStore extends TransientDataStore {
                     if (_log.shouldLog(Log.INFO))
                         _log.info("Unable to read the router reference in " + _routerFile.getName(), ioe);
                     corrupt = true;
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     // key certificate problems, etc., don't let one bad RI kill the whole thing
                     if (_log.shouldLog(Log.INFO))
                         _log.info("Unable to read the router reference in " + _routerFile.getName(), e);
@@ -666,7 +668,7 @@ public class PersistentDataStore extends TransientDataStore {
                 return null;
             Hash h = Hash.create(b);
             return h;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // static
             //_log.warn("Unable to fetch the key from [" + filename + "]", e);
             return null;

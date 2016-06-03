@@ -22,6 +22,7 @@ import net.i2p.I2PAppContext;
 import net.i2p.app.ClientApp;
 import net.i2p.app.ClientAppState;
 import net.i2p.data.DataHelper;
+import net.i2p.data.Base64;
 import net.i2p.router.RouterContext;
 import net.i2p.router.RouterVersion;
 import net.i2p.router.startup.ClientAppConfig;
@@ -353,6 +354,18 @@ public class PluginStarter implements Runnable {
             }
         }
 
+        //handle console icons for plugins without web-resources through prop icon-code
+        String fullprop = props.getProperty("icon-code");
+        if(fullprop != null && fullprop.length() > 1){
+            byte[] decoded = Base64.decode(fullprop);
+            if(decoded != null) {
+                NavHelper.setBinary(appName, decoded);
+                iconfile = "/Plugins/pluginicon?plugin=" + appName;
+            } else {
+                iconfile = "/themes/console/images/plugin.png";
+            }
+        }
+
         // load and start things in clients.config
         File clientConfig = new File(pluginDir, "clients.config");
         if (clientConfig.exists()) {
@@ -423,7 +436,7 @@ public class PluginStarter implements Runnable {
                             addPath(f.toURI().toURL());
                             log.error("INFO: Adding translation plugin to classpath: " + f);
                             added = true;
-                        } catch (Exception e) {
+                        } catch (RuntimeException e) {
                             log.error("Plugin " + appName + " bad classpath element: " + f, e);
                         }
                     }
@@ -961,7 +974,7 @@ public class PluginStarter implements Runnable {
                 urls.add(f.toURI().toURL());
                 if (log.shouldLog(Log.WARN))
                     log.warn("INFO: Adding plugin to classpath: " + f);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 log.error("Plugin client " + clientName + " bad classpath element: " + f, e);
             }
         }

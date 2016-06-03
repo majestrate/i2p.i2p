@@ -32,12 +32,17 @@ public class Messages {
      *    The {0} will be replaced by the parameter.
      *    Single quotes must be doubled, i.e. ' -> '' in the string.
      *  @param o parameter, not translated.
-     *    To tranlslate parameter also, use _t("foo {0} bar", _t("baz"))
+     *    To translate parameter also, use _t("foo {0} bar", _t("baz"))
      *    Do not double the single quotes in the parameter.
      *    Use autoboxing to call with ints, longs, floats, etc.
      */
     public String _t(String s, Object o) {
         return Translate.getString(s, o, _context, BUNDLE_NAME);
+    }
+
+    /** @since 0.9.26 */
+    public String _t(String s, Object o1, Object o2) {
+        return Translate.getString(s, o1, o2, _context, BUNDLE_NAME);
     }
 
     /** translate (ngettext)

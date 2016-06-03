@@ -37,6 +37,8 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 import java.util.zip.Deflater;
 
 import net.i2p.I2PAppContext;
@@ -54,8 +56,6 @@ import net.i2p.util.Translate;
  * @author jrandom
  */
 public class DataHelper {
-    private static final byte[] EQUAL_BYTES = getUTF8("=");
-    private static final byte[] SEMICOLON_BYTES = getUTF8(";");
 
     /**
      *  Map of String to itself to cache common
@@ -86,15 +86,19 @@ public class DataHelper {
             "stat_tunnel.buildExploratorySuccess.60m",
             "stat_tunnel.participatingTunnels.60m",
             "stat_uptime",
+            "family", "family.key", "family.sig",
             // BlockfileNamingService
             "version", "created", "upgraded", "lists",
-            "a", "s",
+            "a", "m", "s", "v"
         };
         _propertiesKeyCache = new HashMap<String, String>(keys.length);
         for (int i = 0; i < keys.length; i++) {
             _propertiesKeyCache.put(keys[i], keys[i]);
         }
     }
+
+    private static final Pattern ILLEGAL_KEY =  Pattern.compile("[#=\r\n;]");
+    private static final Pattern ILLEGAL_VALUE =  Pattern.compile("[#\r\n]");
 
     /** Read a mapping from the stream, as defined by the I2P data structure spec,
      * and store it into a Properties object.
@@ -142,22 +146,18 @@ public class DataHelper {
         int read = read(rawStream, data);
         if (read != size) throw new DataFormatException("Not enough data to read the properties, expected " + size + " but got " + read);
         ByteArrayInputStream in = new ByteArrayInputStream(data);
-        byte eqBuf[] = new byte[EQUAL_BYTES.length];
-        byte semiBuf[] = new byte[SEMICOLON_BYTES.length];
         while (in.available() > 0) {
             String key = readString(in);
             String cached = _propertiesKeyCache.get(key);
             if (cached != null)
                 key = cached;
-            read = read(in, eqBuf);
-            if ((read != eqBuf.length) || (!eq(eqBuf, EQUAL_BYTES))) {
+            int b = in.read();
+            if (b != '=')
                 throw new DataFormatException("Bad key");
-            }
             String val = readString(in);
-            read = read(in, semiBuf);
-            if ((read != semiBuf.length) || (!eq(semiBuf, SEMICOLON_BYTES))) {
+            b = in.read();
+            if (b != ';')
                 throw new DataFormatException("Bad value");
-            }
             Object old = props.put(key, val);
             if (old != null)
                 throw new DataFormatException("Duplicate key " + key);
@@ -176,7 +176,7 @@ public class DataHelper {
      * Properties from the defaults table of props (if any) are not written out by this method.
      *
      * @param rawStream stream to write to
-     * @param props properties to write out
+     * @param props properties to write out, may be null
      * @throws DataFormatException if there is not enough valid data to write out,
      *                             or a length limit is exceeded
      * @throws IOException if there is an IO error writing out the data
@@ -233,7 +233,7 @@ public class DataHelper {
      */
     public static void writeProperties(OutputStream rawStream, Properties props, boolean utf8, boolean sort) 
             throws DataFormatException, IOException {
-        if (props != null) {
+        if (props != null && !props.isEmpty()) {
             Properties p;
             if (sort) {
                 p = new OrderedProperties();
@@ -249,12 +249,12 @@ public class DataHelper {
                     writeStringUTF8(baos, key);
                 else
                     writeString(baos, key);
-                baos.write(EQUAL_BYTES);
+                baos.write('=');
                 if (utf8)
                     writeStringUTF8(baos, val);
                 else
                     writeString(baos, val);
-                baos.write(SEMICOLON_BYTES);
+                baos.write(';');
             }
             if (baos.size() > 65535)
                 throw new DataFormatException("Properties too big (65535 max): " + baos.size());
@@ -295,9 +295,9 @@ public class DataHelper {
                 String key = (String) entry.getKey();
                 String val = (String) entry.getValue();
                 writeStringUTF8(baos, key);
-                baos.write(EQUAL_BYTES);
+                baos.write('=');
                 writeStringUTF8(baos, val);
-                baos.write(SEMICOLON_BYTES);
+                baos.write(';');
             }
             if (baos.size() > 65535)
                 throw new DataFormatException("Properties too big (65535 max): " + baos.size());
@@ -329,8 +329,6 @@ public class DataHelper {
         int size = (int)fromLong(source, offset, 2);
         offset += 2;
         ByteArrayInputStream in = new ByteArrayInputStream(source, offset, size);
-        byte eqBuf[] = new byte[EQUAL_BYTES.length];
-        byte semiBuf[] = new byte[SEMICOLON_BYTES.length];
         while (in.available() > 0) {
             String key;
             try {
@@ -338,20 +336,18 @@ public class DataHelper {
                 String cached = _propertiesKeyCache.get(key);
                 if (cached != null)
                     key = cached;
-                int read = read(in, eqBuf);
-                if ((read != eqBuf.length) || (!eq(eqBuf, EQUAL_BYTES))) {
+                int b = in.read();
+                if (b != '=')
                     throw new DataFormatException("Bad key");
-                }
             } catch (IOException ioe) {
                 throw new DataFormatException("Bad key", ioe);
             }
             String val;
             try {
                 val = readString(in);
-                int read = read(in, semiBuf);
-                if ((read != semiBuf.length) || (!eq(semiBuf, SEMICOLON_BYTES))) {
+                int b = in.read();
+                if (b != ';')
                     throw new DataFormatException("Bad value");
-                }
             } catch (IOException ioe) {
                 throw new DataFormatException("Bad value", ioe);
             }
@@ -506,19 +502,13 @@ public class DataHelper {
             for (Map.Entry<Object, Object> entry : props.entrySet()) {
                 String name = (String) entry.getKey();
                 String val = (String) entry.getValue();
-                if (name.contains("#") ||
-                    name.contains("=") ||
-                    name.contains("\r") ||
-                    name.contains("\n") ||
-                    name.startsWith(";")) {
+                if (ILLEGAL_KEY.matcher(name).matches()) {
                     if (iae == null)
                         iae = new IllegalArgumentException("Invalid character (one of \"#;=\\r\\n\") in key: \"" +
                                                            name + "\" = \"" + val + '\"');
                     continue;
                 }
-                if (val.contains("#") ||
-                    val.contains("\r") ||
-                    val.contains("\n")) {
+                if (ILLEGAL_VALUE.matcher(val).matches()) {
                     if (iae == null)
                         iae = new IllegalArgumentException("Invalid character (one of \"#\\r\\n\") in value: \"" +
                                                            name + "\" = \"" + val + '\"');
@@ -910,8 +900,9 @@ public class DataHelper {
      *               cause a DataFormatException to be thrown
      * @throws DataFormatException if the string is not valid
      * @throws IOException if there is an IO error writing the string
+     * @since public since 0.9.26
      */
-    private static void writeStringUTF8(OutputStream out, String string) 
+    public static void writeStringUTF8(OutputStream out, String string) 
         throws DataFormatException, IOException {
         if (string == null) {
             out.write((byte) 0);
@@ -936,6 +927,7 @@ public class DataHelper {
      * @return boolean value, or null
      * @deprecated unused
      */
+    @Deprecated
     public static Boolean readBoolean(InputStream in) throws DataFormatException, IOException {
         int val = in.read();
         switch (val) {
@@ -1324,8 +1316,9 @@ public class DataHelper {
      *
      * @param hash null OK
      * @return null on EOF
-     * @deprecated use MessageDigest version
+     * @deprecated use MessageDigest version to be removed in 0.9.27
      */
+    @Deprecated
     public static String readLine(InputStream in, Sha256Standalone hash) throws IOException {
         StringBuilder buf = new StringBuilder(128);
         boolean ok = readLine(in, buf, hash);
@@ -1380,7 +1373,7 @@ public class DataHelper {
      *
      * @return true if the line was read, false if eof was reached on an empty line
      *              (returns true for non-empty last line without a newline)
-     * @deprecated use StringBuilder / MessageDigest version
+     * @deprecated use StringBuilder / MessageDigest version, to be removed in 0.9.27
      */
     @Deprecated
     public static boolean readLine(InputStream in, StringBuffer buf, Sha256Standalone hash) throws IOException {
@@ -1420,8 +1413,9 @@ public class DataHelper {
      * @param hash null OK
      * @return true if the line was read, false if eof was reached on an empty line
      *              (returns true for non-empty last line without a newline)
-     * @deprecated use MessageDigest version
+     * @deprecated use MessageDigest version, to be removed in 0.9.27
      */
+    @Deprecated
     public static boolean readLine(InputStream in, StringBuilder buf, Sha256Standalone hash) throws IOException {
         int c = -1;
         int i = 0;
@@ -1463,8 +1457,9 @@ public class DataHelper {
     
     /**
      *  update the hash along the way
-     *  @deprecated use MessageDigest version
+     *  @deprecated use MessageDigest version, to be removed in 0.9.27
      */
+    @Deprecated
     public static void write(OutputStream out, byte data[], Sha256Standalone hash) throws IOException {
         hash.update(data);
         out.write(data);
@@ -1615,11 +1610,11 @@ public class DataHelper {
      * NOTE: formatDuration2() recommended in most cases for readability
      */
     public static String formatSize(long bytes) {
-        double val = bytes;
+        float val = bytes;
         int scale = 0;
-        while (val >= 1024) {
+        while (val >= 1024.0f) {
             scale++; 
-            val /= 1024;
+            val /= 1024.0f;
         }
         
         DecimalFormat fmt = new DecimalFormat("##0.00");
@@ -1693,7 +1688,7 @@ public class DataHelper {
         if (unescaped == null) return null;
         String escaped = unescaped;
         for (int i = 0; i < escapeChars.length; i++) {
-            escaped = escaped.replaceAll(escapeChars[i], escapeCodes[i]);
+            escaped = escaped.replace(escapeChars[i], escapeCodes[i]);
         }
         return escaped;
     }
@@ -1708,7 +1703,7 @@ public class DataHelper {
         if (escaped == null) return null;
         String unescaped = escaped;
         for (int i = 0; i < escapeChars.length; i++) {
-            unescaped = unescaped.replaceAll(escapeCodes[i], escapeChars[i]);
+            unescaped = unescaped.replace(escapeCodes[i], escapeChars[i]);
         }
         return unescaped;
     }
@@ -1878,7 +1873,9 @@ public class DataHelper {
      *  Roughly the same as orig.getBytes("ISO-8859-1") but much faster and
      *  will not throw an exception.
      *
-     *  @param orig non-null, must be 7-bit chars
+     *  Warning - misnamed, converts to ISO-8859-1.
+     *
+     *  @param orig non-null, truncates to 8-bit chars
      *  @since 0.9.5
      */
     public static byte[] getASCII(String orig) {
@@ -1887,5 +1884,39 @@ public class DataHelper {
             rv[i] = (byte)orig.charAt(i);
         }
         return rv;
+    }
+
+    /**
+     *  Same as s.split(regex) but caches the compiled pattern for speed.
+     *  This saves about 10 microseconds (Bulldozer) on subsequent invocations.
+     *
+     *  @param s non-null
+     *  @param regex non-null
+     *  @throws java.util.regex.PatternSyntaxException unchecked
+     *  @since 0.9.24
+     */
+    public static String[] split(String s, String regex) {
+        return split(s, regex, 0);
+    }
+
+    private static final ConcurrentHashMap<String, Pattern> patterns = new ConcurrentHashMap<String, Pattern>();
+
+    /**
+     *  Same as s.split(regex, limit) but caches the compiled pattern for speed.
+     *  This saves about 10 microseconds (Bulldozer) on subsequent invocations.
+     *
+     *  @param s non-null
+     *  @param regex non-null
+     *  @param limit result threshold
+     *  @throws java.util.regex.PatternSyntaxException unchecked
+     *  @since 0.9.24
+     */
+    public static String[] split(String s, String regex, int limit) {
+        Pattern p = patterns.get(regex);
+        if (p == null) {
+            p = Pattern.compile(regex);
+            patterns.putIfAbsent(regex, p);
+        }
+        return p.split(s, limit);
     }
 }

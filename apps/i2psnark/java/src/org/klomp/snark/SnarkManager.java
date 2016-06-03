@@ -133,6 +133,7 @@ public class SnarkManager implements CompleteListener {
     public static final int DEFAULT_STARTUP_DELAY = 3; 
     public static final int DEFAULT_REFRESH_DELAY_SECS = 60;
     private static final int DEFAULT_PAGE_SIZE = 50;
+    public static final int DEFAULT_TUNNEL_QUANTITY = 3;
     public static final String CONFIG_DIR_SUFFIX = ".d";
     private static final String SUBDIR_PREFIX = "s";
     private static final String B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-~";
@@ -161,7 +162,7 @@ public class SnarkManager implements CompleteListener {
 //       ,"Exotrack", "http://blbgywsjubw3d2zih2giokakhe3o2cko7jtte4risb3hohbcoyva.b32.i2p/announce.php=http://exotrack.i2p/"
        ,"DgTrack", "http://w7tpbzncbcocrqtwwm3nezhnnsw4ozadvi2hmvzdhrqzfxfum7wa.b32.i2p/a=http://opentracker.dg2.i2p/"
        // The following is ECDSA_SHA256_P256
-       ,"TheBland", "http://s5ikrdyjwbcgxmqetxb3nyheizftms7euacuub2hic7defkh3xhq.b32.i2p/a=http://tracker.thebland.i2p/stats?mode=peer"
+       ,"TheBland", "http://s5ikrdyjwbcgxmqetxb3nyheizftms7euacuub2hic7defkh3xhq.b32.i2p/a=http://tracker.thebland.i2p/tracker/index.jsp"
     };
     
     /** URL. This is our equivalent to router.utorrent.com for bootstrap */
@@ -189,7 +190,7 @@ public class SnarkManager implements CompleteListener {
         for (int i = 1; i < DEFAULT_TRACKERS.length; i += 2) {
             if (DEFAULT_TRACKERS[i-1].equals("TheBland") && !SigType.ECDSA_SHA256_P256.isAvailable())
                 continue;
-            String urls[] = DEFAULT_TRACKERS[i].split("=", 2);
+            String urls[] = DataHelper.split(DEFAULT_TRACKERS[i], "=", 2);
             ann.add(urls[0]);
         }
         DEFAULT_TRACKER_ANNOUNCES = Collections.unmodifiableSet(ann);
@@ -610,7 +611,9 @@ public class SnarkManager implements CompleteListener {
         if (!_config.containsKey(PROP_I2CP_PORT))
             _config.setProperty(PROP_I2CP_PORT, "7654");
         if (!_config.containsKey(PROP_I2CP_OPTS))
-            _config.setProperty(PROP_I2CP_OPTS, "inbound.length=3 outbound.length=3 inbound.quantity=3 outbound.quantity=3");
+            _config.setProperty(PROP_I2CP_OPTS, "inbound.length=3 outbound.length=3" +
+                                                " inbound.quantity=" + DEFAULT_TUNNEL_QUANTITY +
+                                                " outbound.quantity=" + DEFAULT_TUNNEL_QUANTITY);
         //if (!_config.containsKey(PROP_EEP_HOST))
         //    _config.setProperty(PROP_EEP_HOST, "127.0.0.1");
         //if (!_config.containsKey(PROP_EEP_PORT))
@@ -1078,7 +1081,7 @@ public class SnarkManager implements CompleteListener {
             val = dflt;
         if (val == null)
             return Collections.emptyList();
-        return Arrays.asList(val.split(","));
+        return Arrays.asList(DataHelper.split(val, ","));
     }
 
     /**
@@ -1114,7 +1117,7 @@ public class SnarkManager implements CompleteListener {
     }
     
     /** hardcoded for sanity.  perhaps this should be customizable, for people who increase their ulimit, etc. */
-    public static final int MAX_FILES_PER_TORRENT = 999;
+    public static final int MAX_FILES_PER_TORRENT = 2000;
     
     /**
      *  Set of canonical .torrent filenames that we are dealing with.
@@ -1627,7 +1630,7 @@ public class SnarkManager implements CompleteListener {
             return;
         int filecount = metainfo.getFiles().size();
         int[] rv = new int[filecount];
-        String[] arr = pri.split(",");
+        String[] arr = DataHelper.split(pri, ",");
         for (int i = 0; i < filecount && i < arr.length; i++) {
             if (arr[i].length() > 0) {
                 try {
@@ -2067,7 +2070,7 @@ public class SnarkManager implements CompleteListener {
                     synchronized (_snarks) {
                         ok = monitorTorrents(dir);
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     _log.error("Error in the DirectoryMonitor", e);
                     ok = false;
                 }
@@ -2076,7 +2079,7 @@ public class SnarkManager implements CompleteListener {
                     try {
                         addMagnets();
                         doMagnets = false;
-                    } catch (Exception e) {
+                    } catch (RuntimeException e) {
                         _log.error("Error in the DirectoryMonitor", e);
                     }
                     if (!_snarks.isEmpty())
@@ -2160,7 +2163,7 @@ public class SnarkManager implements CompleteListener {
                 }
                 _magnets.remove(snark.getName());
                 removeMagnetStatus(snark.getInfoHash());
-                addMessage(_t("Metainfo received for {0}", snark.getName()));
+                //addMessage(_t("Metainfo received for {0}", snark.getName()));
                 addMessageNoEscape(_t("Starting up torrent {0}", linkify(snark)));
                 return name;
             } catch (IOException ioe) {
@@ -2282,7 +2285,7 @@ public class SnarkManager implements CompleteListener {
                     // Snark.fatal() throws a RuntimeException
                     // don't let one bad torrent kill the whole loop
                     addTorrent(name, null, !shouldAutoStart());
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     addMessage(_t("Error: Could not add the torrent {0}", name) + ": " + e);
                     _log.error("Unable to add the torrent " + name, e);
                     rv = false;
@@ -2301,7 +2304,7 @@ public class SnarkManager implements CompleteListener {
                     // Snark.fatal() throws a RuntimeException
                     // don't let one bad torrent kill the whole loop
                     stopTorrent(name, true);
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     // don't bother with message
                 }
             }
@@ -2358,12 +2361,12 @@ public class SnarkManager implements CompleteListener {
         if ( (trackers == null) || (trackers.trim().length() <= 0) ) {
             setDefaultTrackerMap(true);
         } else {
-            String[] toks = trackers.split(",");
+            String[] toks = DataHelper.split(trackers, ",");
             for (int i = 0; i < toks.length; i += 2) {
                 String name = toks[i].trim().replace("&#44;", ",");
                 String url = toks[i+1].trim().replace("&#44;", ",");
                 if ( (name.length() > 0) && (url.length() > 0) ) {
-                    String urls[] = url.split("=", 2);
+                    String urls[] = DataHelper.split(url, "=", 2);
                     String url2 = urls.length > 1 ? urls[1] : "";
                     _trackerMap.put(name, new Tracker(name, urls[0], url2));
                 }
@@ -2383,7 +2386,7 @@ public class SnarkManager implements CompleteListener {
             String name = DEFAULT_TRACKERS[i];
             if (name.equals("TheBland") && !SigType.ECDSA_SHA256_P256.isAvailable())
                 continue;
-            String urls[] = DEFAULT_TRACKERS[i+1].split("=", 2);
+            String urls[] = DataHelper.split(DEFAULT_TRACKERS[i+1], "=", 2);
             String url2 = urls.length > 1 ? urls[1] : null;
             _trackerMap.put(name, new Tracker(name, urls[0], url2));
         }
@@ -2483,7 +2486,7 @@ public class SnarkManager implements CompleteListener {
         public void run() {
             try {
                 run2();
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 _log.error("Error starting", e);
             }
         }
@@ -2611,7 +2614,7 @@ public class SnarkManager implements CompleteListener {
                 } else {
                     addMessageNoEscape(_t("Finished recheck of torrent {0}, unchanged", link));
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 _log.error("Error rechecking " + snark.getBaseName(), e);
                 addMessage(_t("Error checking the torrent {0}", snark.getBaseName()) + ": " + e);
             }

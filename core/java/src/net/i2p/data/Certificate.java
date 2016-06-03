@@ -176,7 +176,7 @@ public class Certificate extends DataStructureImpl {
         if (_type < 0) throw new DataFormatException("Invalid certificate type: " + _type);
         //if ((_type != 0) && (_payload == null)) throw new DataFormatException("Payload is required for non null type");
 
-        DataHelper.writeLong(out, 1, _type);
+        out.write((byte) _type);
         if (_payload != null) {
             DataHelper.writeLong(out, 2, _payload.length);
             out.write(_payload);
@@ -215,7 +215,7 @@ public class Certificate extends DataStructureImpl {
             throw new DataFormatException("Cert is too small [" + source.length + " off=" + offset + "]");
 
         int cur = offset;
-        _type = (int)DataHelper.fromLong(source, cur, 1);
+        _type = source[cur] & 0xff;
         cur++;
         int length = (int)DataHelper.fromLong(source, cur, 2);
         cur += 2;

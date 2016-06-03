@@ -25,7 +25,6 @@ public class ConfigNetHelper extends HelperBase {
     final static String PROP_I2NP_NTCP_PORT = "i2np.ntcp.port";
     final static String PROP_I2NP_NTCP_AUTO_PORT = "i2np.ntcp.autoport";
     final static String PROP_I2NP_NTCP_AUTO_IP = "i2np.ntcp.autoip";
-    private final static String CHECKED = " checked=\"checked\" ";
 
     public String getUdphostname() {
         return _context.getProperty(UDPTransport.PROP_EXTERNAL_HOST, ""); 
@@ -76,13 +75,6 @@ public class ConfigNetHelper extends HelperBase {
      */
     public String getConfiguredUdpPort() {
         return _context.getProperty(UDPTransport.PROP_INTERNAL_PORT, "unset");
-    }
-
-    /** @param prop must default to false */
-    public String getChecked(String prop) {
-        if (_context.getBooleanProperty(prop))
-            return CHECKED;
-        return "";
     }
 
     public String getDynamicKeysChecked() {
@@ -157,6 +149,7 @@ public class ConfigNetHelper extends HelperBase {
      *  This isn't updated for the new statuses, but it's commented out in the jsp.
      *  @deprecated unused, to be fixed if needed
      */
+    @Deprecated
     public String getRequireIntroductionsChecked() {
         Status status = _context.commSystem().getStatus();
         switch (status) {
@@ -207,7 +200,7 @@ public class ConfigNetHelper extends HelperBase {
             configs = Collections.emptySet();
         } else {
             configs = new HashSet<String>(4);
-            String[] ca = cs.split("[,; \r\n\t]");
+            String[] ca = DataHelper.split(cs, "[,; \r\n\t]");
             for (int i = 0; i < ca.length; i++) {
                 String c = ca[i];
                 if (c.length() > 0) {
@@ -229,10 +222,12 @@ public class ConfigNetHelper extends HelperBase {
             buf.append(addr);
             buf.append("<br>");
         }
-        buf.append("\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-                   "<input type=\"checkbox\" class=\"optbox\" name=\"addrnew\"");
-        buf.append(CHECKED);
-        buf.append("><input name =\"udpHost1\" type=\"text\" size=\"16\" />" +
+        buf.append("\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+        if (!addrs.isEmpty()) {
+            buf.append(_t("Add host name or IP"))
+               .append(": ");
+        }
+        buf.append("<input name=\"udpHost1\" type=\"text\" size=\"16\" >" +
                    "</div>");
         return buf.toString();
     }

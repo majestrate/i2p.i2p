@@ -16,12 +16,15 @@
             <!-- Depend on classes instead of jars where available -->
             <classpath>
                 <pathelement location="../../../core/java/build/obj" />
+                <pathelement location="../../../core/java/build/gnu-getopt.jar" />
                 <pathelement location="../../ministreaming/java/build/obj" />
                 <pathelement location="../../jetty/jettylib/javax.servlet.jar" />
                 <pathelement location="../../jetty/jettylib/jetty-webapp.jar" />
                 <pathelement location="../../jetty/jettylib/org.mortbay.jetty.jar" />
                 <pathelement location="../../jetty/jettylib/jetty-util.jar" />
                 <pathelement location="../../jetty/jettylib/jetty-servlet.jar" />
+                <!-- jsp-api.jar only present for debian builds -->
+                <pathelement location="../../jetty/jettylib/jsp-api.jar" />
             </classpath>
         </depend>
     </target>
@@ -44,6 +47,15 @@
             includeAntRuntime="false"
             classpath="../../../core/java/build/i2p.jar:../../jetty/jettylib/javax.servlet.jar:../../ministreaming/java/build/mstreaming.jar:../../jetty/jettylib/jetty-webapp.jar:../../jetty/jettylib/org.mortbay.jetty.jar:../../jetty/jettylib/jetty-util.jar:../../jetty/jettylib/jetty-servlet.jar" >
             <compilerarg line="${javac.compilerargs}" />
+            <classpath>
+                <pathelement location="../../../core/java/build/i2p.jar" />
+                <!-- gnu-getopt.jar only present for debian builds -->
+                <pathelement location="../../../core/java/build/gnu-getopt.jar" />
+                <pathelement location="../../ministreaming/java/build/mstreaming.jar" />
+                <pathelement location="../../jetty/jettylib/javax.servlet.jar" />
+                <!-- jsp-api.jar only present for debian builds -->
+                <pathelement location="../../jetty/jettylib/jsp-api.jar" />
+            </classpath>
         </javac>
     </target>
 
@@ -66,7 +78,7 @@
         <property name="workspace.changes.tr" value="" />
         <jar destfile="./build/i2psnark.jar" basedir="./build/obj" includes="**/*.class" excludes="**/web/* **/messages_*.class">
             <manifest>
-                <attribute name="Main-Class" value="org.klomp.snark.Snark" />
+                <attribute name="Main-Class" value="org.klomp.snark.CommandLine" />
                 <attribute name="Class-Path" value="i2p.jar mstreaming.jar streaming.jar" />
                 <attribute name="Implementation-Version" value="${full.version}" />
                 <attribute name="Built-By" value="${build.built-by}" />
@@ -136,6 +148,7 @@
     </target>
     
     <target name="bundle" depends="compile" unless="no.bundle">
+        <mkdir dir="build/messages-src" />
         <!-- Update the messages_*.po files.
              We need to supply the bat file for windows, and then change the fail property to true -->
         <exec executable="sh" osfamily="unix" failifexecutionfails="true" failonerror="${require.gettext}" >
@@ -149,6 +162,11 @@
         <exec executable="sh" osfamily="windows" failifexecutionfails="false" >
             <arg value="./bundle-messages.sh" />
         </exec>
+        <javac source="${javac.version}" target="${javac.version}" 
+               includeAntRuntime="false"
+               srcdir="build/messages-src" destdir="build/obj">
+            <compilerarg line="${javac.compilerargs}" />
+        </javac>
     </target>
 
     <target name="poupdate" depends="builddep, compile">

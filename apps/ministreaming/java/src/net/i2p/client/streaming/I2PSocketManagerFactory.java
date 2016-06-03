@@ -37,6 +37,7 @@ public class I2PSocketManagerFactory {
      *  Ignored since 0.9.12, cannot be changed via properties.
      *  @deprecated
      */
+    @Deprecated
     public static final String PROP_MANAGER = "i2p.streaming.manager";
 
     /**
@@ -195,7 +196,9 @@ public class I2PSocketManagerFactory {
             ByteArrayOutputStream keyStream = new ByteArrayOutputStream(1024);
             try {
                 client.createDestination(keyStream, getSigType(opts));
-            } catch (Exception e) {
+            } catch (I2PException e) {
+                throw new I2PSessionException("Error creating keys", e);
+            } catch (IOException e) {
                 throw new I2PSessionException("Error creating keys", e);
             }
             myPrivateKeyStream = new ByteArrayInputStream(keyStream.toByteArray());

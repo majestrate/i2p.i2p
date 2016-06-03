@@ -23,6 +23,7 @@ trans.sv_SE = apps/i2ptunnel/locale/messages_sv.po
 trans.uk_UA = apps/i2ptunnel/locale/messages_uk.po
 trans.vi = apps/i2ptunnel/locale/messages_vi.po
 trans.zh_CN = apps/i2ptunnel/locale/messages_zh.po
+trans.zh_TW = apps/i2ptunnel/locale/messages_zh_TW.po
 
 [I2P.proxy]
 source_file = apps/i2ptunnel/locale-proxy/messages_en.po
@@ -76,6 +77,7 @@ trans.tr_TR = apps/routerconsole/locale/messages_tr.po
 trans.uk_UA = apps/routerconsole/locale/messages_uk.po
 trans.vi = apps/routerconsole/locale/messages_vi.po
 trans.zh_CN = apps/routerconsole/locale/messages_zh.po
+trans.zh_TW = apps/routerconsole/locale/messages_zh_TW.po
 
 [I2P.welcome]
 source_file = apps/routerconsole/locale-news/messages_en.po
@@ -105,6 +107,7 @@ trans.sv_SE = apps/routerconsole/locale-news/messages_sv.po
 trans.tr_TR = apps/routerconsole/locale-news/messages_tr.po
 trans.uk_UA = apps/routerconsole/locale-news/messages_uk.po
 trans.zh_CN = apps/routerconsole/locale-news/messages_zh.po
+trans.zh_TW = apps/routerconsole/locale-news/messages_zh_TW.po
 
 [I2P.countries]
 type = PO
@@ -136,6 +139,7 @@ trans.uk_UA = apps/routerconsole/locale-countries/messages_uk.po
 trans.tr_TR = apps/routerconsole/locale-countries/messages_tr.po
 trans.vi = apps/routerconsole/locale-countries/messages_vi.po
 trans.zh_CN = apps/routerconsole/locale-countries/messages_zh.po
+trans.zh_TW = apps/routerconsole/locale-countries/messages_zh_TW.po
 
 [I2P.i2psnark]
 source_file = apps/i2psnark/locale/messages_en.po
@@ -188,15 +192,24 @@ trans.zh_CN = apps/susidns/locale/messages_zh.po
 source_file = apps/desktopgui/locale/messages_en.po
 source_lang = en
 trans.ar = apps/desktopgui/locale/messages_ar.po
+trans.bg = apps/desktopgui/locale/messages_bg.po
+trans.ca = apps/desktopgui/locale/messages_ca.po
 trans.cs = apps/desktopgui/locale/messages_cs.po
 trans.da = apps/desktopgui/locale/messages_da.po
 trans.de = apps/desktopgui/locale/messages_de.po
 trans.el = apps/desktopgui/locale/messages_el.po
 trans.es = apps/desktopgui/locale/messages_es.po
+trans.fa = apps/desktopgui/locale/messages_fa.po
+trans.fi = apps/desktopgui/locale/messages_fi.po
 trans.fr = apps/desktopgui/locale/messages_fr.po
 trans.hu = apps/desktopgui/locale/messages_hu.po
+;; Java converts id to in
+trans.id = apps/desktopgui/locale/messages_in.po
 trans.it = apps/desktopgui/locale/messages_it.po
 trans.ja = apps/desktopgui/locale/messages_ja.po
+trans.ko = apps/desktopgui/locale/messages_ko.po
+trans.mg = apps/desktopgui/locale/messages_mg.po
+trans.nb = apps/desktopgui/locale/messages_nb.po
 trans.nl = apps/desktopgui/locale/messages_nl.po
 trans.pl = apps/desktopgui/locale/messages_pl.po
 trans.pt_BR = apps/desktopgui/locale/messages_pt_BR.po
@@ -204,6 +217,7 @@ trans.ro = apps/desktopgui/locale/messages_ro.po
 trans.ru_RU = apps/desktopgui/locale/messages_ru.po
 trans.sk = apps/desktopgui/locale/messages_sk.po
 trans.sv_SE = apps/desktopgui/locale/messages_sv.po
+trans.sq = apps/desktopgui/locale/messages_sq.po
 trans.uk_UA = apps/desktopgui/locale/messages_uk.po
 trans.tr_TR = apps/desktopgui/locale/messages_tr.po
 trans.vi = apps/desktopgui/locale/messages_vi.po

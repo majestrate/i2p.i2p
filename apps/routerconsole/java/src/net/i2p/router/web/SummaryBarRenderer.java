@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import net.i2p.app.ClientAppManager;
 import net.i2p.crypto.SigType;
@@ -24,7 +23,7 @@ import net.i2p.util.SystemVersion;
  *  Refactored from summarynoframe.jsp to save ~100KB
  *
  */
-public class SummaryBarRenderer {
+class SummaryBarRenderer {
 
     static final String ALL_SECTIONS[] =
         {"HelpAndFAQ", "I2PServices", "I2PInternals", "General", "ShortGeneral", "NetworkReachability",
@@ -278,6 +277,7 @@ public class SummaryBarRenderer {
            .append(_t("show"))
            .append("</a></td></tr>\n" +
 
+                   "</table><table>" + // fix for some rows with a big left side and some with a big right side
                    "<tr title=\"")
            .append(_t("The version of the I2P software we are running"))
            .append("\">" +
@@ -288,6 +288,7 @@ public class SummaryBarRenderer {
            .append(_helper.getVersion())
            .append("</td></tr>\n" +
 
+                   "</table><table>" + // fix for some rows with a big left side and some with a big right side
                    "<tr title=\"")
            .append(_t("How long we've been running for this session"))
            .append("\">" +
@@ -634,9 +635,7 @@ public class SummaryBarRenderer {
                 buf.append("<ul>\n");
                 DateFormat fmt = DateFormat.getDateInstance(DateFormat.SHORT);
                 // the router sets the JVM time zone to UTC but saves the original here so we can get it
-                String systemTimeZone = _context.getProperty("i2p.systemTimeZone");
-                if (systemTimeZone != null)
-                    fmt.setTimeZone(TimeZone.getTimeZone(systemTimeZone));
+                fmt.setTimeZone(SystemVersion.getSystemTimeZone(_context));
                 int i = 0;
                 final int max = 2;
                 for (NewsEntry entry : entries) {

@@ -1,5 +1,6 @@
 package net.i2p.router.update;
 
+import java.io.ByteArrayInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,14 +21,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 
 import net.i2p.app.ClientAppManager;
+import net.i2p.crypto.CertUtil;
 import net.i2p.crypto.SU3File;
 import net.i2p.crypto.TrustedUpdate;
+import net.i2p.data.Base64;
 import net.i2p.data.DataHelper;
 import net.i2p.router.RouterContext;
 import net.i2p.router.RouterVersion;
+import net.i2p.router.news.CRLEntry;
 import net.i2p.router.news.NewsEntry;
 import net.i2p.router.news.NewsManager;
 import net.i2p.router.news.NewsMetadata;
@@ -42,8 +46,10 @@ import net.i2p.util.FileUtil;
 import net.i2p.util.Log;
 import net.i2p.util.PortMapper;
 import net.i2p.util.ReusableGZIPInputStream;
+import net.i2p.util.SecureFile;
 import net.i2p.util.SecureFileOutputStream;
 import net.i2p.util.SSLEepGet;
+import net.i2p.util.SystemVersion;
 import net.i2p.util.Translate;
 import net.i2p.util.VersionComparator;
 
@@ -226,6 +232,18 @@ class NewsFetcher extends UpdateRunner {
                                 _mgr.notifyVersionConstraint(this, _currentURI, ROUTER_SIGNED, "", ver, msg);
                                 return;
                             }
+                            if (!FileUtil.isPack200Supported()) {
+                                String msg = _mgr._t("No Pack200 support in Java runtime.");
+                                _log.logAlways(Log.WARN, "Cannot update to version " + ver + ": " + msg);
+                                _mgr.notifyVersionConstraint(this, _currentURI, ROUTER_SIGNED, "", ver, msg);
+                                return;
+                            }
+                            if (!ConfigUpdateHandler.USE_SU3_UPDATE) {
+                                String msg = _mgr._t("No update certificates installed.");
+                                _log.logAlways(Log.WARN, "Cannot update to version " + ver + ": " + msg);
+                                _mgr.notifyVersionConstraint(this, _currentURI, ROUTER_SIGNED, "", ver, msg);
+                                return;
+                            }
                             String minRouter = args.get(MIN_VERSION_KEY);
                             if (minRouter != null) {
                                 if (VersionComparator.comp(RouterVersion.VERSION, minRouter) < 0) {
@@ -252,7 +270,7 @@ class NewsFetcher extends UpdateRunner {
                             // TODO clearnet URLs, notify with HTTP_CLEARNET and/or HTTPS_CLEARNET
                             Map<UpdateMethod, List<URI>> sourceMap = new HashMap<UpdateMethod, List<URI>>(4);
                             // Must do su3 first
-                            if (ConfigUpdateHandler.USE_SU3_UPDATE) {
+                            //if (ConfigUpdateHandler.USE_SU3_UPDATE) {
                                 sourceMap.put(HTTP, _mgr.getUpdateURLs(ROUTER_SIGNED_SU3, "", HTTP));
                                 addMethod(TORRENT, args.get(SU3_KEY), sourceMap);
                                 addMethod(HTTP_CLEARNET, args.get(CLEARNET_HTTP_SU3_KEY), sourceMap);
@@ -261,14 +279,14 @@ class NewsFetcher extends UpdateRunner {
                                 _mgr.notifyVersionAvailable(this, _currentURI, ROUTER_SIGNED_SU3,
                                                             "", sourceMap, ver, "");
                                 sourceMap.clear();
-                            }
-                            // now do sud/su2
-                            sourceMap.put(HTTP, _mgr.getUpdateURLs(ROUTER_SIGNED, "", HTTP));
-                            String key = FileUtil.isPack200Supported() ? SU2_KEY : SUD_KEY;
-                            addMethod(TORRENT, args.get(key), sourceMap);
+                            //}
+                            // now do sud/su2 - DISABLED
+                            //sourceMap.put(HTTP, _mgr.getUpdateURLs(ROUTER_SIGNED, "", HTTP));
+                            //String key = FileUtil.isPack200Supported() ? SU2_KEY : SUD_KEY;
+                            //addMethod(TORRENT, args.get(key), sourceMap);
                             // notify about all sources at once
-                            _mgr.notifyVersionAvailable(this, _currentURI, ROUTER_SIGNED,
-                                                        "", sourceMap, ver, "");
+                            //_mgr.notifyVersionAvailable(this, _currentURI, ROUTER_SIGNED,
+                            //                            "", sourceMap, ver, "");
                         } else {
                             if (_log.shouldLog(Log.DEBUG))
                                 _log.debug("Our version is current");
@@ -415,9 +433,8 @@ class NewsFetcher extends UpdateRunner {
         
         if (_tempFile.exists() && _tempFile.length() > 0) {
             File from;
-            // TODO check magic number instead?
-            // But then a corrupt file would be displayed as-is...
-            if (url.endsWith(".su3") || url.contains(".su3?")) {
+            // sud/su2 disabled
+            //if (url.endsWith(".su3") || url.contains(".su3?")) {
                 try {
                     from = processSU3();
                 } catch (IOException ioe) {
@@ -425,9 +442,9 @@ class NewsFetcher extends UpdateRunner {
                     _tempFile.delete();
                     return;
                 }
-            } else {
-                from = _tempFile;
-            }
+            //} else {
+            //    from = _tempFile;
+            //}
             boolean copied = FileUtil.rename(from, _newsFile);
             _tempFile.delete();
             if (copied) {
@@ -498,6 +515,12 @@ class NewsFetcher extends UpdateRunner {
                     nmgr.storeEntries(nodes);
                 }
             }
+            // Persist any new CRL entries
+            List<CRLEntry> crlEntries = parser.getCRLEntries();
+            if (crlEntries != null)
+                persistCRLEntries(crlEntries);
+            else
+                _log.info("No CRL entries found in news feed");
             // store entries and metadata in old news.xml format
             String sudVersion = su3.getVersionString();
             String signingKeyName = su3.getSignerString();
@@ -531,6 +554,57 @@ class NewsFetcher extends UpdateRunner {
             } catch (IOException ioe) {}
             ReusableGZIPInputStream.release(in);
         }
+    }
+
+    /**
+     *  Output any updated CRL entries
+     *
+     *  @since 0.9.26
+     */
+    private void persistCRLEntries(List<CRLEntry> entries) {
+        File dir = new SecureFile(_context.getConfigDir(), "certificates");
+        if (!dir.exists() && !dir.mkdir()) {
+            _log.error("Failed to create CRL directory " + dir);
+            return;
+        }
+        dir = new SecureFile(dir, "revocations");
+        if (!dir.exists() && !dir.mkdir()) {
+            _log.error("Failed to create CRL directory " + dir);
+            return;
+        }
+        int i = 0;
+        for (CRLEntry e : entries) {
+            if (e.id == null || e.data == null) {
+                if (_log.shouldWarn())
+                    _log.warn("Bad CRL entry received");
+                continue;
+            }
+            byte[] bid = DataHelper.getUTF8(e.id);
+            byte[] hash = new byte[32];
+            _context.sha().calculateHash(bid, 0, bid.length, hash, 0);
+            String name = "crl-" + Base64.encode(hash) + ".crl";
+            File f = new File(dir, name);
+            if (f.exists() && f.lastModified() >= e.updated)
+                continue;
+            OutputStream out = null;
+            try {
+                byte[] data = DataHelper.getUTF8(e.data);
+                // test for validity
+                CertUtil.loadCRL(new ByteArrayInputStream(data));
+                out = new SecureFileOutputStream(f);
+                out.write(data);
+            } catch (GeneralSecurityException gse) {
+                _log.error("Bad CRL", gse);
+            } catch (IOException ioe) {
+                _log.error("Failed to write CRL", ioe);
+            } finally {
+                if (out != null) try { out.close(); } catch (IOException ioe) {}
+            }
+            f.setLastModified(e.updated);
+            i++;
+        }
+        if (i > 0)
+            _log.logAlways(Log.WARN, "Stored " + i + " new CRL " + (i > 1 ? "entries" : "entry"));
     }
 
     /**
@@ -579,9 +653,7 @@ class NewsFetcher extends UpdateRunner {
                 return;
             DateFormat fmt = DateFormat.getDateInstance(DateFormat.SHORT);
             // the router sets the JVM time zone to UTC but saves the original here so we can get it
-            String systemTimeZone = _context.getProperty("i2p.systemTimeZone");
-            if (systemTimeZone != null)
-                fmt.setTimeZone(TimeZone.getTimeZone(systemTimeZone));
+            fmt.setTimeZone(SystemVersion.getSystemTimeZone(_context));
             for (NewsEntry e : entries) {
                 if (e.title == null || e.content == null)
                     continue;
