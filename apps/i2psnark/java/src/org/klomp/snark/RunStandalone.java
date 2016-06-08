@@ -1,6 +1,7 @@
 package org.klomp.snark;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -37,11 +38,12 @@ public class RunStandalone {
         
             
         WebAppContext webapp = new WebAppContext();
-        webapp.setContextPath("/i2psnark");
-        webapp.setWar(warfile.getAbsolutePath());
-        _server.setHandler(webapp);
-     
         try {
+            final File tempdir = Files.createTempDirectory("tmp-i2psnark").toFile();
+            webapp.setTempDirectory(tempdir);
+            webapp.setContextPath("/i2psnark");
+            webapp.setWar(warfile.getAbsolutePath());
+            _server.setHandler(webapp);
             _server.start();
         } catch(Exception thrown) {
             thrown.printStackTrace();
